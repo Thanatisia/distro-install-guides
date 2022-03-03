@@ -4,7 +4,7 @@ My collection base-installation & post-installation install + Setup guides
 
 - Used and referenced in my Install Scripts found in 
 	
-	> (Arch Distro Install Script)[https://github.com/Thanatisia/distro-installscript-arch]
+	> [Arch Distro Install Script](https://github.com/Thanatisia/distro-installscript-arch)
 	
 
 ## Table of Contents:
