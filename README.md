@@ -15,17 +15,17 @@ My collection base-installation & post-installation install + Setup guides
 
 ## ArchLinux
 
-> (ArchLinux Installation Guide)[ArchLinux]
+> [ArchLinux Installation Guide](ArchLinux)
 
 ## Debian (via Debootstrap)
 
-> (Debian Installation Guide via Debootstrap)[Debian]
+> [Debian Installation Guide via Debootstrap](Debian)
 
 ## Gentoo
 
-> (Gentoo Installation Guide)[Gentoo]
+> [Gentoo Installation Guide](Gentoo)
 
 ## VoidLinux
 
-> (VoidLinux Installation Guide)[VoidLinux]
+> [VoidLinux Installation Guide](VoidLinux)
 
