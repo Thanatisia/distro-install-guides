@@ -1,0 +1,94 @@
++ [Audio]
+	#--- Terminal
+	alsa
+	#--- GUI
+	pulseaudio
+
++ [Terminals]
+	alacritty
+	rxvt-unicode (urxvt)
+
++ [Web Browsers]
+	chrome
+	firefox
+	# --- Minimal
+	surf (suckless minimal browser)
+	nyxt (keyboard/vim based browser)
+
++ [File Managers]
+	thunar
+	pcmanfm
+
++ [Utilities]
+	# --- Version Control
+	git
+	# ---Fetch
+	neofetch
+	# Readers
+	zathura: PDF Reader
+	pandoc : Document maker
+	# Image Control
+	pywal (https://github.com/dylanaraps/pywal)
+	imagemagick
+	nitrogen (Image Utility)
+	# --- Launcher
+	dmenu (suckless simple command line tool)
+	# --- Cronjob
+	cronie
+	# --- Screenshot
+	scrot
+	# --- Commands
+	entr
+	# --- Media Player
+	mpv
+	# --- Fun
+	figlet
+	# --- Firewall
+	ufw
+	# --- Email
+	(neo)mutt (Terminal Email Client)
+
++ [Networking]
+	inetutils
+
++ [Ricing]
+	# --- Bars
+	polybar
+	lemonbar
+	# --- Context Menu
+	XMenu
+	xclickroot
+	# --- System Monitor
+	conky
+	# --- Notifications
+	notify-send
+	dunst (Lightweight Replacement Notification-Daemon)
+
++ [Compositor]
+	picom
+
++ [Fonts]
+	ttf-font-awesome
+
++ [screenlocker]
+	xautolocker
+	i3-lock
+	
++ [Resources]
+	# --- Wallpaper packs
+	gnome-backgrounds
+	mate-backgrounds
+	deepin-backgrounds
+	elementary-wallpapers
+	plasma-workspace-wallpapers
+	archlinux-wallpaper
+
++ [Gaming]
+	steam (proton)
+	lutris
+	wine
+
++ [Fun] 
+	ascii-image-converter
+
+
