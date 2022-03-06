@@ -1444,7 +1444,8 @@ Template Install Structure
 	```
 	- This is using steps mentioned in the guide
 	```
-	Planning:
+	# 0. Planning
+	Partition Table:
 		Partition Label	: {BIOS|UEFI}
 		Device Label	: {MSDOS (MBR)|GPT}
 		Device Name	: {/dev/sdX}
@@ -1472,18 +1473,35 @@ Template Install Structure
 			1, Boot, /mnt/debinst/boot, primary, ext4, xStart{MiB|GiB...}, xEnd{MiB|GiB...}, Yes
 			2, Root, /mnt/debinst, 	    primary, ext4, xStart{MiB|GiB...}, xEnd{MiB|GiB...}	
 			3, Home, /mnt/debinst/home, primary, ext4, xStart{MiB|GiB...}, xEnd{MiB|GiB...}	
-		Base Packages to Install (Pacstrap):
-			base
-			linux
-			linux-firmware
-			linux-lts
-			linux-lts-headers
-			base-devel
-			vim
-		Additional Packages to Install:
+	System Structure:
+		Debootstrap Parameters:
+			Version: 
+			Include Base Packages to Install (--include):
+				linux-image-amd64
+				grub-pc
+				locales
+				base
+				linux
+				linux-firmware
+				linux-lts
+				linux-lts-headers
+				base-devel
+				vim
+			Architecture (--arch): amd64
+			Release: {unstable|raring|bullseye|etc...}
+			Target mount path/partition: /mnt/debinst
+			Debian Mirror: {default: http://ftp.us.debian.org/debian}
+		Additional Packages to Install: 
+			neofetch
+		Host Packages:
 			arch-install-scripts
+	Networking:
+		Hostname: Debian
+	User Info:
+	
 
 
+	# 1. Prepare File System
 	Create partition table on the device:
 		```
 		- aka Reformat
@@ -1538,8 +1556,373 @@ Template Install Structure
 		sudo sync
 		sudo swapon /dev/<device_name>
 	```
-	sudo mkswap /dev/sdX2
-	sudo sync
-	sudo swapon /dev/sdX2
+		sudo mkswap /dev/sdX2
+		sudo sync
+		sudo swapon /dev/sdX2
 
+
+	# 2. Make and mount the root/mount point for the root filesystem + Other folders to mount
+
+	Make mount debinst folder:
+		mkdir /mnt/debinst
+
+	Mount the created mount debinst folder (/mnt/debinst) into the Root filesystem/partition:
+		```
+		Syntax:
+		Usage: mount {<options> <option parameter>} <device> <mount_path>	
+		Template : mount {<options> <option parameter>} /dev/<device_root_partition> /mnt/debinst
+		
+		Options
+			-t : Type
+			mount -t ext4 <device> <mount_path>
+		```
+		mount -t ext4 /dev/sdb2 /mnt/debinst
+
+	(OPTIONAL) Make other folders:
+		```
+		Syntax: mkdir -p <folders_to_create>
+		```
+		mkdir -p /mnt/debinst/boot
+		mkdir -p /mnt/debinst/home
+
+	(OPTIONAL) Mount created folders:
+		```
+		Syntax: mount /dev/<device_partition_to_mount> <folder>
+		```
+		mount /dev/sdb1 /mnt/debinst/boot
+		mount /dev/sdb3 /mnt/debinst/home
+
+
+	# O.1. (OPTIONAL) If Distro is NOT Debian
+	Install debootstrap:
+		i. Create work folder
+			mkdir work
+			cd work
+
+		ii. Download the Debian debootstrap_0.X.X_all.deb file into 'work' folder
+			# Method 1 : Wget 
+				```
+				Syntax : wget http://ftp.debian.org/debian/pool/main/d/debootstrap/debootstrap_<version_number>_all.deb
+				```
+				wget http://ftp.debian.org/debian/pool/main/d/debootstrap/debootstrap_1.0.123_all.deb
+
+
+		iii. Extract the debootstrap archive file
+			```
+			Syntax : ar -x debootstrap_<version_number>_all.deb
+			```
+			ar -vx debootstrap_1.0.123_all.deb	# Extract the Archive with Verbose
+
+		iv. Change Directory to Root
+			cd /
+
+		v. Compress the 'data.tar.gz' file from 'work' folder and extract the files
+			```
+			Note: 
+				- This requires sudo on both zcat and tar
+				- If you are unable to use 'debootstrap' without specifying the path (i.e. /usr/sbin/debootstrap)
+					- Please append it to your path (place into your .bashrc for permanent)
+					PATH+=:/usr/sbin
+			Syntax : sudo zcat /full_path_to_work/work/data.tar.gz | sudo tar xv
+			```
+			sudo zcat ~/work/data.tar.gz | sudo tar xv
+
+
+	# 3. Run debootstrap
+		```
+		Syntax
+			- 1. Simple
+				/usr/sbin/debootstrap --arch <architecture> buster \
+					/mnt/debinst http://ftp.us.debian.org/debian
+
+			- 2. Full
+				debootstrap 	--include <packages> \				# Packages to strap
+		    				--arch <architecture> \				# Architecture
+		    				<release> \					# Release
+						<target_mount_path> \				# Target partition / mount path
+						http://ftp.us.debian.org/debian			# Debian mirror
+		```
+		- Install and install packages, kernels
+			debootstrap 	--include linux-image-amd64,grub-pc,locales \	# Packages to strap
+		    			--arch amd64 \					# Architecture
+		    			unstable \					# Release
+					/mnt/debinst \					# Target partition / mount path
+					http://ftp.us.debian.org/debian			# Debian mirror
+	
+
+	# 4. Configure the base system
+		i. Prepare the chroot environment
+			```
+ 			Copy mounted fstab to deboot
+			- Copy the mounted file systems table (fstab)
+			- This keeps the 'df' command happy
+			- This will be overwritten upon boot
+			```
+			cp /etc/mtab /mnt/debinst/etc/mtab
+
+		ii. Bind virtual file systems
+			```
+			Until your new install is booting on its own, 
+			- System will borrow the virtual file systems from the host
+			```
+			mount -o bind /dev 	/mnt/debinst/dev
+			mount -o bind /proc	/mnt/debinst/proc
+			mount -o bind /sys	/mnt/debinst/sys
+
+		iii. Chroot into Debian System
+			```
+			- This command is pretty similar to how we usually root into an Arch system using arch-chroot. 
+			- Once executed, the next commands we'll type will be run in the new system.
+			Syntax : sudo chroot /mnt/debinst <any-other-parameters> /bin/bash
+			```
+			sudo LANG=C.UTF-8 chroot /mnt/debinst /bin/bash
+
+		iv. (OPTIONAL) If the target architecture is different from the host, 
+			```
+			you will need to first copy qemu-user-static to the new host
+			```
+			sudo cp /usr/bin/qemu-<architecture>-static /mnt/debinst/usr/bin
+			sudo LANG=C.UTF-8 chroot /mnt/debinst qemu-<architecture>-static /bin/bash
+
+		v. (OPTIONAL) You may need to set the terminal definition to be compatible with the Debian base system
+			```
+			Syntax : export TERM={main terminal}
+			Notes:
+				- Depending on the value of TERM, you may have to install the 'ncurses-term' package to get support for it.
+			```
+			export TERM=xterm-color
+
+		vi. (OPTIONAL)
+			```
+			- If the target architecture is different from the host,
+				- You need to finish the multi-stage boot strap
+			Syntax: sudo chroot {mount_path} /debootstrap/debootstrap --second-stage
+			```
+			sudo chroot /mnt/debinst /debootstrap/debootstrap --second-stage
+
+	4.1. Set Root Password:
+		i. Set Password
+			```
+			Syntax : passwd <user>
+			Remarks:
+				- If user is left empty, you will set password for the root
+			```
+			passwd
+
+	4.2. Create device files:
+		i. Install makedev package
+			apt install makedev
+
+		ii. Create a default set of static device files (after chrooting)
+			mount non /proc -t proc
+
+		iii. Change directory to /dev
+			cd /dev
+
+		iv. Manually create only specific device files using MAKEDEV
+			```
+			Device Types:
+				generic
+	
+			Syntax : /usr/sbin/MAKEDEV <device_type>
+			```
+			/usr/sbin/MAKEDEV generic
+
+
+	4.3. Mount partitions:
+		i. Create /etc/fstab and add file system information
+
+			b. Automatic (via Genfstab)
+				- 1.i. Installation
+					- If your distro is:
+						a. Arch : sudo pacman -S arch-install-scripts
+						b. Debian : sudo apt(-get) install arch-install-scripts
+
+				- 1.ii. Generate File Systems Table (genfstab)
+					genfstab -U /mnt/debinst | sudo tee /mnt/debinst/etc/fstab
+
+
+
+	4.4. Setting Timezone:
+		i. Set hardware clock to UTC
+			echo "0.0 0 0.0
+			0	
+			UTC" >> /etc/adjtime
+
+		ii. Choose my timezone 
+			#############
+			# Automatic #
+			#############
+			
+			# To find your Region
+			ls /usr/share/zoneinfo
+
+			# To find your City
+			ls /usr/share/zoneinfo/<Region>
+
+			# To symbolic link the zoneinfo to /etc/localtime
+			ln -fs /usr/share/zoneinfo/<Region>/<City> /etc/localtime	# Same as ArchLinux
+
+			# Set tzdata automatically based off the '/etc/localtime'
+			sudo dpkg-reconfigure -f noninteractive tzdata
+
+	4.5. Configure Networking:
+		i. Change hostname
+			```
+			Syntax : echo "<Hostname>" > /etc/hostname
+			```
+			echo "Debian" > /etc/hostname
+
+		ii. Add Hosts with IPv6 support
+			echo -e "127.0.0.1 localhost
+			::1	localhost
+			127.0.1.1 Debian.localdomain Debian" >> /etc/hosts
+
+		iii. Setup Networking
+			# Setup DHCP (Dynamic IP)
+				echo -e "# The loopback network interface
+				autolo
+				iface lo inet loopback
+
+				# The primary network interface
+				allow-hotplug eth0
+				iface eth0 inet dhcp" >> /etc/network/interfaces
+
+		iv. Add nameserver(s) and search directives in '/etc/resolv.conf'
+			echo -e "search google.com
+			nameserver 8.8.8.8" >> /etc/resolv.conf
+
+
+	4.6. Configure Apt:
+		i. Add additional sources to apt
+			# Add Content
+			echo -e "deb-src http://ftp.us.debian.org/debian bullsye main
+			deb http://security.debian.org/ bullseye/updates main
+			deb-src http://security.debian.org/ bullseye/updates main" >> /etc/apt/sources.list
+	
+		ii. Run 'apt update' after you have made changes to the source list
+			apt update
+
+
+	# (OPTIONAL) O.4. Configure Locales & Keyboard
+		i. Set Locale
+			```
+			- Just like ArchLinux
+		
+			Syntax:
+				- To uncomment from locale.gen : sed -i '/$language/s/^#//g' <file>
+				- To comment in locale.gen : sed -i '/$language/s/^/#/g' <file>
+			```
+			# Uncomment language
+			sed -i '/en_SG.UTF-8/s/^#//g' /etc/locale.gen
+	
+			# Generate locale
+				locale-gen
+
+			# Update /etc/locale.conf
+				echo "LANG=$language" >> /etc/locale.conf
+
+
+		ii. Configure Keyboard
+			```
+			- To configure your keyboard (if needed)
+			- Note that the keyboard cannot be set while in the chroot, but will be configured for the next reboot.
+			```
+			apt install console-setup
+			sudo dpkg-reconfigure keyboard-configuration
+
+
+
+	# 5. Install a Kernel
+		i. Identify available pre-packages kernels
+			apt search linux-image
+
+		ii. Install the Kernel package of your choice using its package name
+			# Search for a Package
+				kernel_pkg=$(apt search linux-image)
+			# Install Package
+				apt install "$kernel_pkg"
+
+
+	# 6. Setup the Bootloader
+		i. Install bootloader
+			```
+			Syntax:
+				if bootloader is
+					grub:
+						apt install grub-pc														# Optional: If not debootstrap-ped
+						- If partition scheme is MBR
+							[Install Syntax]
+							[1] grub-install <other_parameters> /dev/<device_name>
+							[2] grub-install --target=$bootloader_target_device_Type --debug $bootloader_optional_Params $device_Name	# If debootstrap did not indicate target device architecture
+							[3] grub-install --debug /dev/<device_name>									# # If debootstrap indicated target device architecture
+						- If partition scheme is UEFI	
+							[Install Syntax]
+							- TBC
+						update-grub
+					syslinux:
+			```
+			# grub:
+				apt install grub-pc
+				grub-install --debug /dev/sdX
+				update-grub
+
+	# 7. Update the ramdisk
+		i. Update ramdisk
+			```
+			Usage: update-initramfs <options> <parameters>
+
+			Options:
+				-u : Update an existing initramfs
+				-k : Set version to generate initramfs
+
+			Syntax : update-initramfs -u -k all 	# Update all existing initramfs and generate initramfs for all versions
+			```
+			update-initramfs -u -k all
+
+
+	# 8. Post-Installation
+
+	8.2. Installing other packages:
+
+		i. Update and Upgrade aptitude cache
+			apt update && apt upgrade
+
+		ii. Installing packages
+			apt install xserver-xorg	# For the X Display Server in general
+			apt install bspwm sxhkd		# Window Manager
+
+
+	8.3. Create new users:
+		i. Create sudo user
+			useradd -m -d /path/to/home/directory -g sudo -G <secondary-groups> <username>
+
+		ii. Change user password
+			passwd <username>
+
+
+	8.4. Allow Sudo
+		(OPTIONAL) O.6. Using wheel group
+			"""
+			- If you prefer the wheel group
+			"""
+			i. Create 'wheel' group
+				groupadd 
+
+			ii. Add user to group 'wheel'
+				usermod -a -G wheel <username>
+	
+			iii. Update sudoers and allow 'wheel' group members to use sudo
+				"""
+				File: /etc/sudoers
+				"""
+				> EDITOR=vim sudo visudo
+				Content:
+					%wheel ALL=(ALL:ALL) ALL
+
+		i. Add user to group 'sudo'
+			"""
+			- Natively, equivalent to 'wheel'
+			"""
+			usermod -a -G sudo <username>
 
