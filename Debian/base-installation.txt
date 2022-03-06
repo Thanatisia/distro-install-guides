@@ -1472,6 +1472,16 @@ Template Install Structure
 			1, Boot, /mnt/debinst/boot, primary, ext4, xStart{MiB|GiB...}, xEnd{MiB|GiB...}, Yes
 			2, Root, /mnt/debinst, 	    primary, ext4, xStart{MiB|GiB...}, xEnd{MiB|GiB...}	
 			3, Home, /mnt/debinst/home, primary, ext4, xStart{MiB|GiB...}, xEnd{MiB|GiB...}	
+		Base Packages to Install (Pacstrap):
+			base
+			linux
+			linux-firmware
+			linux-lts
+			linux-lts-headers
+			base-devel
+			vim
+		Additional Packages to Install:
+			arch-install-scripts
 
 
 	Create partition table on the device:
