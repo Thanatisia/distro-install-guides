@@ -15,13 +15,30 @@ My collection base-installation & post-installation install + Setup guides
 
 ## ArchLinux
 
+```
+2022-03-08 2214H : 
+	- Tested and basic-installation guide installs successfully
+```
+
 > [ArchLinux Installation Guide](ArchLinux)
 
 ## Debian (via Debootstrap)
 
+```
+2022-03-08 2214H : 
+	- Ongoing Tests and rewriting for easier reference and understanding
+```
+
 > [Debian Installation Guide via Debootstrap](Debian)
 
 ## Gentoo
+
+```
+2022-03-08 2214H : 
+	- Rewriting - Not-bootable as of [2022-03-08]
+2022-03-13 0044H : 
+	- Completed first rewrite draft, to be tested
+```
 
 > [Gentoo Installation Guide](Gentoo)
 
