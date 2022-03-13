@@ -263,82 +263,6 @@ File System (Swap):
 	Examples:
 		mount /dev/sdb1 /mnt/gentoo/boot
 		mount /dev/sdb3 /mnt/gentoo/home
-
-- (OPTIONAL) Generate File Systems Table for mounted partitions
-	```
-	File Systems Table (fstab) is a file that describes and tells the bootloader x partition to automatically mount in y directory on bootup
-
-	- If you have made and mounted other directories (i.e. Boot and Home partitions)
-		- You can start to generate a file systems table (fstab) file and write it into the root partition (/etc/fstab)
-
-	Methods to generate a file system table:
-		Automatic:
-			- Using genfstab
-				- Package: 
-					Gentoo: sys-fs/genfstab
-					- If you are using other linux distributions in your host system: arch-install-scripts
-		Manual:
-			- Getting UUID of the partition
-
-	File Systems Table Structure:
-		File : /etc/fstab
-		======================================================================================================
-		| device | mount_point | filesystem_type | mount_options | backup_ops_token | filesystem_check_order |
-		======================================================================================================
-
-		- device : 
-			- Either the given name (/dev/sdX(n))
-			- UUID of the mounted device (UUID=[uuid])
-	```
-	Automatic:
-		- Using genfstab
-			Installation/Setup:
-				- Gentoo
-					```
-					Package : sys-fs/genfstab
-					```
-					sudo emerge sys-fs/genfstab
-
-				- If you are using other linux distributions in your host system
-					```
-					Package : arch-install-scripts
-					```
-					sudo {pacman -S | apt(-get) install} arch-install-scripts
-			Syntax:
-				sudo genfstab -U {mount_point} | sudo tee -a {mount_point}/etc/fstab
-			Usage: 
-				sudo genfstab -U /mnt/gentoo | sudo tee -a /mnt/gentoo/etc/fstab
-
-	Manual:
-		- Getting UUID of the partition
-			```
-			- Use 'blkid' to get UUID of a mount point
-			Syntax: blkid {device_name}{partition_number}
-			Usage: blkid /dev/sdX(n)
-			```
-			uuid_boot=$(blkid /dev/sdX1);
-			uuid_root=$(blkid /dev/sdX2);
-			uuid_home=$(blkid /dev/sdX3);
-
-		- Design File Systems Table
-			```
-			Structure:
-			fstab_contents="# Mounted Directory
-				UUID=$(blkid {partition})	{mount_point} {fs_type}	{mount_options} {backup_ops_token} {fs_check_order}";
-			```
-			fstab_contents="
-				# /boot
-				UUID=$uuid_boot	/boot 	ext4	defaults    0 0
-
-				# /
-				UUID=$uuid_root / 	ext4	defaults    0 0
-
-				# /home
-				UUID=$uuid_home /home 	ext4	defaults    0 0";
-
-		- Write to File Systems Table (fstab) file
-			sudo echo -e "$fstab_contents" >> /etc/fstab
-
 	
 NOTES:
 - For some reason, formatting your root partition (/dev/sdX2) as FAT32 has issues with some packages, thus - please try to 
@@ -1299,6 +1223,98 @@ Tools:
 	Gentoo genfstab tool : https://github.com/YangMame/Gentoo-Installer/blob/master/genfstab
 ```
 
+- (OPTIONAL) Generate File Systems Table for mounted partitions
+	```
+	File Systems Table (fstab) is a file that describes and tells the bootloader x partition to automatically mount in y directory on bootup
+
+	About fstab : Under Linux, all partitions used by the system must be listed in /etc/fstab. This file contains the mount points of those partitions (where they are seen in the file system structure), how they should be mounted and with what special options (automatically or not, whether users can mount them or not, etc.) 
+	Background Information:
+		- The /etc/fstab file uses a table-like syntax. Every line consists of six fields, separated by whitespace (space(s), tabs or a mixture). Each field has its own meaning:
+	 	1. The first field shows the block special device or remote filesystem to be mounted. Several kinds of device identifiers are available for block special device nodes, including paths to device files, filesystem labels and UUIDs, and partition labels and UUIDs.
+    		2. The second field shows the mount point at which the partition should be mounted.
+    		3. The third field shows the filesystem used by the partition.
+    		4. The fourth field shows the mount options used by mount when it wants to mount the partition. As every filesystem has its own mount options, users are encouraged to read the mount man page (man mount) for a full listing. Multiple mount options are comma-separated.
+    		5. The fifth field is used by dump to determine if the partition needs to be dumped or not. This can generally be left as 0 (zero).
+    		6. The sixth field is used by fsck to determine the order in which filesystems should be checked if the system wasn't shut down properly. The root filesystem should have 1 while the rest should have 2 (or 0 if a filesystem check isn't necessary).
+	
+	- If you have made and mounted other directories (i.e. Boot and Home partitions)
+		- You can start to generate a file systems table (fstab) file and write it into the root partition (/etc/fstab)
+
+	Syntax:
+		<partition/device ID>	<mount-point>	<filesystem-type>	<mount-options>	<to be dumped or not;default:0 (dump)> <order-to-check (fsck); default - root:1; 0 if filesystem check is unnecessary>
+		UUID=$(lsblk {device_name}{partition_number})
+
+	Methods to generate a file system table:
+		Automatic:
+			- Using genfstab
+				- Package: 
+					Gentoo: sys-fs/genfstab
+					- If you are using other linux distributions in your host system: arch-install-scripts
+		Manual:
+			- Getting UUID of the partition
+
+	File Systems Table Structure:
+		File : /etc/fstab
+		======================================================================================================
+		| device | mount_point | filesystem_type | mount_options | backup_ops_token | filesystem_check_order |
+		======================================================================================================
+
+		- device : 
+			- Either the given name (/dev/sdX(n))
+			- UUID of the mounted device (UUID=[uuid])
+
+	NOTES:
+		- The default /etc/fstab file provided by Gentoo is not a valid fstab file but instead more of a template.
+	```
+	Automatic:
+		- Using genfstab
+			Installation/Setup:
+				- Gentoo
+					```
+					Package : sys-fs/genfstab
+					```
+					sudo emerge sys-fs/genfstab
+
+				- If you are using other linux distributions in your host system
+					```
+					Package : arch-install-scripts
+					```
+					sudo {pacman -S | apt(-get) install} arch-install-scripts
+			Syntax:
+				sudo genfstab -U {mount_point} | sudo tee -a {mount_point}/etc/fstab
+			Usage: 
+				sudo genfstab -U /mnt/gentoo | sudo tee -a /mnt/gentoo/etc/fstab
+
+	Manual:
+		- Getting UUID of the partition
+			```
+			- Use 'blkid' to get UUID of a mount point
+			Syntax: blkid {device_name}{partition_number}
+			Usage: blkid /dev/sdX(n)
+			```
+			uuid_boot=$(blkid /dev/sdX1);
+			uuid_root=$(blkid /dev/sdX2);
+			uuid_home=$(blkid /dev/sdX3);
+
+		- Design File Systems Table
+			```
+			Structure:
+			fstab_contents="# Mounted Directory
+				UUID=$(blkid {partition})	{mount_point} {fs_type}	{mount_options} {backup_ops_token} {fs_check_order}";
+			```
+			fstab_contents="
+				# /boot
+				UUID=$uuid_boot	/boot 	ext4	defaults    0 0
+
+				# /
+				UUID=$uuid_root / 	ext4	defaults    0 0
+
+				# /home
+				UUID=$uuid_home /home 	ext4	defaults    0 0";
+
+		- Write to File Systems Table (fstab) file
+			sudo echo -e "$fstab_contents" >> /etc/fstab
+
 - (OPTIONAL) Setup Swapfile
 	- Create /swapfile of size (n)
 		```
@@ -1328,104 +1344,6 @@ Tools:
 		```
 		echo "# /swapfile" >> /etc/fstab
 		echo "/swapfile none swap defaults 0 0" >> /etc/fstab
-
-- (OPTIONAL) Setup Filesystem Table file (fstab)
-	```
-	About fstab : Under Linux, all partitions used by the system must be listed in /etc/fstab. This file contains the mount points of those partitions (where they are seen in the file system structure), how they should be mounted and with what special options (automatically or not, whether users can mount them or not, etc.) 
-	Background Information:
-		- The /etc/fstab file uses a table-like syntax. Every line consists of six fields, separated by whitespace (space(s), tabs or a mixture). Each field has its own meaning:
-	 	1. The first field shows the block special device or remote filesystem to be mounted. Several kinds of device identifiers are available for block special device nodes, including paths to device files, filesystem labels and UUIDs, and partition labels and UUIDs.
-    		2. The second field shows the mount point at which the partition should be mounted.
-    		3. The third field shows the filesystem used by the partition.
-    		4. The fourth field shows the mount options used by mount when it wants to mount the partition. As every filesystem has its own mount options, users are encouraged to read the mount man page (man mount) for a full listing. Multiple mount options are comma-separated.
-    		5. The fifth field is used by dump to determine if the partition needs to be dumped or not. This can generally be left as 0 (zero).
-    		6. The sixth field is used by fsck to determine the order in which filesystems should be checked if the system wasn't shut down properly. The root filesystem should have 1 while the rest should have 2 (or 0 if a filesystem check isn't necessary).
-	Syntax:
-		<partition/device ID>	<mount-point>	<filesystem-type>	<mount-options>	<to be dumped or not;default:0 (dump)> <order-to-check (fsck); default - root:1; 0 if filesystem check is unnecessary>
-		UUID=$(lsblk {device_name}{partition_number})
-	NOTE:
-		- The default /etc/fstab file provided by Gentoo is not a valid fstab file but instead more of a template.
-		- If you have done this previously, you may ignore this step
-	```
-
-	- Generate/Create a fstab file 
-		Manual:
-			- Edit /etc/fstab
-				```
-				Notes:
-					- In the remainder of the text, we use the default /dev/sd* block device files as partition.
-				```
-				$EDITOR /etc/fstab
-
-			- Filesystem labels & UUIDs
-				```
-				Both MBR (BIOS) and GPT include support for filesystem labels and filesystem UUIDs. 
-				- These attributes can be defined in /etc/fstab as alternatives for the mount command to use when attempting to find and mount block devices. 
-				- Filesystem labels and UUIDs are identified by the LABEL and UUID prefix and can be viewed with the blkid command:
-
-				NOTE:
-					- If the filesystem inside a partition is wiped, then the filesystem label and the UUID values will be subsequently altered or removed.
- 					- Because of uniqueness, readers that are using an MBR-style partition table are recommended to use UUIDs over labels to define mountable volumes in /etc/fstab. 
-				```
-				blkid
-
-			- Partition labels & UUIDs
-				```
-				Users who have gone the GPT route have a couple more 'robust' options available to define partitions in /etc/fstab. 
-				Partition labels and partition UUIDs can be used to identify the block device's individual partition(s), 
-					- regardless of what filesystem has been chosen for the partition itself. 
-				Partition labels and UUIDs are identified by the PARTLABEL and PARTUUID prefixes respectively and can be viewed nicely in the terminal by running the blkid command
-
-				NOTES:
-					While not always true for partition labels, using a UUID to identify a partition in fstab provides a guarantee that the bootloader will not be confused when looking for a certain volume, even if the filesystem would be changed in the future. Using the older default block device files (/dev/sd*N) for defining the partitions in fstab is risky for systems that are restarted often and have SATA block devices added and removed regularly.
-						- The naming for block device files depends on a number of factors, including how and in what order the disks are attached to the system. 
-						- They also could show up in a different order depending on which of the devices are detected by the kernel first during the early boot process. 
-						- With this being stated, unless one intends to constantly fiddle with the disk ordering, using default block device files is a simple and straightforward approach. 
-				```
-				blkid
-
-			- EXAMPLE: /boot line for /etc/fstab
-				```
-				Let us take a look at how to write down the options for the /boot/ partition. 
-				- This is just an example, and should be modified according to the partitioning decisions made earlier in the installation. 
-				- In our amd64 partitioning example, /boot/ is usually the /dev/sda1 partition, with ext2 as filesystem. 
-				- It needs to be checked during boot, so we would write down: 
-				NOTE:
- 					Some users don't want their /boot/ partition to be mounted automatically to improve their system's security. 
- 					Those people should substitute defaults with noauto. 
- 					This does mean that those users will need to manually mount this partition every time they want to use it.
- 					Add the rules that match the previously decided partitioning scheme and append rules for devices such as CD-ROM drive(s), and of course, if other partitions or drives are used, for those too. 
-				```
-				/dev/sda1   /boot     ext4    defaults        0 2
-
-
-			- EXAMPLE: Full /etc/fstab
-				```
-				- When auto is used in the third field, 
-				-	it makes the mount command guess what the filesystem would be. 
-				- This is recommended for removable media as they can be created with one of many filesystems. The user option in the fourth field makes it possible for non-root users to mount the CD. 
-				- To improve performance, most users would want to add the noatime mount option, which results in a faster system since access times aren't registered (those are not needed generally anyway). This is also recommended for solid state drive (SSD) users, who should also enable the discard mount option (ext4 and btrfs only for now) which makes the TRIM command work. 
-				```
-				/dev/sda1   /boot        ext2    defaults,noatime     0 2
-				/dev/sda2   none         swap    sw                   0 0
-				/dev/sda3   /            ext4    noatime              0 1  
-				/dev/cdrom  /mnt/cdrom   auto    noauto,user          0 0
-
-			- EXAMPLE: Full /etc/fstab with UUID
-				UUID=$(blkid /dev/sda1)   /boot        ext2    defaults,noatime     0 2
-				UUID=$(blkid /dev/sda2)   none         swap    sw                   0 0
-				UUID=$(blkid /dev/sda3)   /            ext4    noatime              0 1  
-				UUID=$(blkid /dev/cdrom)  /mnt/cdrom   auto    noauto,user          0 0
-
-		Automatic:
-			- Using genfstab (external file)
-				```
-				use -U or -L to define by UUID or labels, respectively: 
-
-				NOTE:
-					- (Important) Please refer to [(OPTIONAL). Generate File Systems Table for mounted partitions] for more detailed steps on using fstab
-				```
-				genfstab -U /mnt >> /mnt/etc/fstab
 
 - Set Networking Information
 	```

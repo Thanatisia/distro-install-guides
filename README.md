@@ -46,3 +46,13 @@ My collection base-installation & post-installation install + Setup guides
 
 > [VoidLinux Installation Guide](VoidLinux)
 
+
+## Templates
+
+```
+2022-03-13 1015H:
+	- Created Templates folder for storing all templates (related to distro installation) for reuse
+```
+
+> [Distro Install Templates](Templates)
+

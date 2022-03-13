@@ -17,89 +17,52 @@
 [MBR (MSDOS)]
 Device Specifications:
 	Device ID: 
-	Device Type: MicroSD
-	Device Name: /dev/sdb
-	Device Size: 256.0GB
-	Device UUID: 
-	Device Boot: Master Boot Record (MBR)
+	Device Type: {MicroSD|USB FlashDrive|VHD}
+	Device Name: {/dev/sdX}
+	Device Size: (N){KiB|MiB|GiB...}
+	Device UUID: $(blkid $device_name$partition_number)
+	Device Boot: {MSDOS (MBR/BIOS)|GPT (UEFI)}
 
-File System (No Swap):
-	Partition ID: 1
-	Partition Name: Boot
-	Partition File Type: EXT4
-	Partition Start Size: 1MiB
-	Partition End Size: 1024MiB
-	Bootable: True
+File System Table:
+	Partition ID: n
+	Partition Name: 
+	Partition File Type: {fat16|fat32|ext4|linux-swap}
+	Partition Start Size: {0%|n(KiB, MiB, GiB)}
+	Partition End Size: {100%|n(KiB, MiB, GiB)}
+	Bootable: {True|False}
 	Command: 
-		parted $device_Name mkpart primary $partition_fileType 0% 1024MiB
-		mkfs.ext4 /dev/sdb1
+		```
+		Syntax: 
+			- Creating new partition
+				parted [device_name] mkpart [partition_category] [partition_fileType] [start_size] [end_size]
 
-		# To set bootable on 
-		parted $device_Name set <partition> boot on
+			- Formatting file system
+				mkfs.{filetype} {options} [device_name](partition_number)
 
-	Partition ID: 2
-	Partition Name: Root
-	Partition File Type: ext4
-	Partition Start Size: 1024MiB
-	Partition End Size: 51200MiB
-	Bootable: False
-	Command: 
-		parted $device_Name mkpart primary $partition_fileType 1024MiB 51200MiB
-		mkfs.ext4 /dev/sdb2
+			- Formatting Swap
+				mkswap [device_name](partition_number)
 
-	Partition ID: 3
-	Partition Name: Home
-	Partition File Type: ext4
-	Partition Start Size: 51200MiB
-	Partition End Size: 100%
-	Bootable: False
-	Command: 
-		parted $device_Name mkpart primary $partition_fileType 51200MiB 100%
-		mkfs.ext4 /dev/sdb3
+			- Set settings to partition
+				parted [device_name] set [partition_number] {settings}
 
-File System (Swap):
-	Partition ID: 1
-	Partition Name: Boot
-	Partition File Type: ext4
-	Partition Start Size: 1MiB
-	Partition End Size: 1024MiB
-	Bootable: True
-	Command: 
-		parted $device_Name mkpart primary $partition_fileType 0% 1024MiB
-		mkfs.ext4 /dev/sdb1
+				settings:
+					boot {on|off} : Set Boot
+		```
+		# Format Partition
+			# Fat{16|32}
+				mkfs.fat -f {16|32} /dev/sdX(n)
+			# EXT4
+				mkfs.ext4 /dev/sdX(n) 
+			# Swap
+				mkswap /dev/sdX(n)
 
-	Partition ID: 2
-	Partition Name: Swap
-	Partition File Type: swap
-	Partition Start Size: 1024MiB
-	Partition End Size: 8192MiB
-	Bootable: False
-	Command: 
-		parted $device_Name mkpart primary $partition_fileType 1024MiB 8192MiB
-		mkswap /dev/sdb2
-		swapon /dev/sdb2
-		echo "# -- Swap Partition 1" | tee -a /etc/fstab
-		echo "UUID=device_UUID none swap defaults 0 0" | tee -a /etc/fstab
-		
-	Partition ID: 3
-	Partition Name: Root
-	Partition File Type: ext4
-	Partition Start Size: 1024MiB
-	Partition End Size: 51200MiB
-	Bootable: False
-	Command: 
-		parted $device_Name mkpart primary $partition_fileType 1024MiB 51200MiB
-		mkfs.ext4 /dev/sdb3
+		# (OPTIONAL) To set bootable on 
+			parted $device_Name set <partition> boot on
 
-	Partition ID: 4
-	Partition Name: Home
-	Partition File Type: ext4
-	Partition Start Size: 51200MiB
-	Partition End Size: 100%
-	Bootable: False
-	Command: 
-		parted $device_Name mkpart primary $partition_fileType 51200MiB 100%
-		mkfs.ext4 /dev/sdb4
+		# (OPTIONAL) Setup Swap Partition
+			swapon /dev/sdX(n)
+			echo "# -- Swap Partition 1" | tee -a /etc/fstab
+			echo "UUID=device_UUID none swap defaults 0 0" | tee -a /etc/fstab
 
 #
 # BIOS / MBR (Non-UEFI)
@@ -357,7 +320,7 @@ vim|nano /etc/pacman.conf
 visudo
 # uncomment: %wheel ALL=(ALL) ALL
 # OR using command: 
-sed -i 's/^#\s*\(%wheel\s\+ALL=(ALL:ALL)\s\+ALL\)/\1/' /etc/sudoers
+sed -i 's/^#\s*\(%wheel\s\+ALL=(ALL)\s\+ALL\)/\1/' /etc/sudoers
 
 # -- Administrative Stuff
 # Create user account
