@@ -15,9 +15,9 @@ My collection base-installation & post-installation install + Setup guides
 	
 	> [Arch Distro Install Script](https://github.com/Thanatisia/distro-installscript-arch)
 
-- This is part of
+- This is related to and part of
 	- [Linux Setup Guides - PostInstallations](https://github.com/Thanatisia/linux-postinstallations)
-	- [Linux Setup Guides - Window Manager](https://github.com/Thanatisia/linux-setup-wm)
+	- [Linux Setup Guides - Window Manager](https://github.com/Thanatisia/linux-postinstallations/tree/main/Setup%20-%20Window%20Managers)
 
 ## ArchLinux
 
