@@ -1,0 +1,12 @@
+List of Gentoo Mirrors:
+```
+Arranged by Countries and Alphabetical Order
+```
+General:
+	Default distfiles mirrors (Approved by mirror admin team): GENTOO_MIRRORS="http://distfiles.gentoo.org"
+
+Singapore:
+	NUS : HTTPS : https://download.nus.edu.sg/mirror/gentoo/
+	NUS : HTTP  : http://download.nus.edu.sg/mirror/gentoo/
+	NUS : rsync : rsync://download.nus.edu.sg/gentoo/
+

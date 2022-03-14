@@ -295,16 +295,42 @@ NOTES:
 	- Kernel Types:
 		Desktop
 		Non-Desktop
+
+	- Please prepare your tarball file URL
+		- The tarball is your base system
+		- Go to the gentoo mirror list
+			- https://www.gentoo.org/downloads/mirrors/
+		- Select your country, 
+			- select a mirror
+				- URL Structure: {mirror}/releases/[your_architecture]/autobuilds/[latest_date]
+				1. Go to 'releases'
+				2. Go to {your-architecture} (i.e. 'amd64')
+				3. Go to 'autobuilds'
+				4. Pick the latest date
+				5. Select a tarball to download
+					i.e. 
+						stage3-amd64-.....tar.xz
+				6. Copy/Get the file download URL
 	```
 
 	- Using a Graphical Browser/Terminal
+		```
+		Using an existing linux install/build
+		The current host system install may be using a different architecture/linux distro
+			- i.e. 
+				ArchLinux (pacman)
+				Debian (aptitude)
+
+		- Download Stage Tarball
+		```
 		- Using wget
 			```
 			- To get the PASTED_STAGE_URL from the Gentoo downloads : https://www.gentoo.org/downloads/#other-arches
 			- To download tarball stage: https://www.gentoo.org/downloads/mirrors/
+			
+			Syntax: wget <tarball_basesystem_file_url>
 			```
-			Syntax: wget <PASTED_STAGE_URL>
-			Command: wget https://www.gentoo.org/downloads/mirrors/
+			wget https://download.nus.edu.sg/mirror/gentoo/releases/amd64/autobuilds/20220308T160629Z/stage3-[architecture]-[other_info]-20220308T160629Z.tar.xz
 
 	- Using a Command-line Browser
 		- if you are using a Virtual Machine 
@@ -343,18 +369,7 @@ NOTES:
 			```
 			Syntax: lynx {site_url}
 			Command: lynx https://www.gentoo.org/downloads/mirrors/
-
-	- Using an existing linux install/build
-		```
-		The current host system install may be using a different architecture/linux distro
-			- i.e. 
-				ArchLinux (pacman)
-				Debian (aptitude)
-
-		- Download Stage Tarball
-		```
 		
-
 
 - Verify the file exists
 	ls
@@ -415,21 +430,52 @@ REFERENCES:
 	https://wiki.gentoo.org/wiki/Handbook:AMD64/Installation/Base
 ```
 
-- Select Mirrors
-	```
-	select what mirrors you want to use from the internet and get the fastest ones possible
-	- select a mirror from the list
-	- The selected mirrors will append to the make.conf file
+- Edit Portage Mirrors
+	- If using Gentoo Live-CD
+		```
+		Pre-Requisite:
+			app-portage/mirrorselect
+		Install Packages
+		```
+		emerge --ask app-portage/mirrorselect
 
-	Syntax: mirroselect -i -o : Select a mirror to use for portage
-	```
-	mirrorselect -i -o >> /mnt/gentoo/etc/portage/make.conf
+	- If using Gentoo-based system
+		- Select Mirrors
+			```
+			select what mirrors you want to use from the internet and get the fastest ones possible
+			- select a mirror from the list
+			- The selected mirrors will append to the make.conf file
+
+			Syntax: mirrorselect -i -o : Select a mirror to use for portage
+			```
+			mirrorselect -i -o >> /mnt/gentoo/etc/portage/make.conf
+
+	- If using existing linux install/build
+		```
+		Installing from another linux distro
+
+		- Please prepare the mirror URLs to add into [/etc/portage/make.conf]
+			- You may refer to my list of mirrors documentation for list of mirrors
+
+		References:
+			- https://wiki.gentoo.org/wiki/GENTOO_MIRRORS
+
+		NOTE:
+			- Please seperate all mirror links with space (' ')
+		Syntax: GENTOO_MIRRORS="your links here"
+
+		Examples:
+			Default distfiles mirrors (Approved by mirror admin team): GENTOO_MIRRORS="http://distfiles.gentoo.org"
+		```
+		echo "GENTOO_MIRRORS=\"your links here\"" >> /etc/portage/make.conf
+
 
 - Make a Gentoo ebuild repository
 	```
 	If repos.conf doesnt exist: create the repos.conf directory
 	```
 	mkdir --parents /mnt/gentoo/etc/portage/repos.conf
+
 
 - Copy the Gentoo repository configuration file provided by Portage to the (newly created) repos.conf directory
 	cp /mnt/gentoo/usr/share/portage/config/repos.conf /mnt/gentoo/etc/portage/repos.conf/gentoo.conf
@@ -617,19 +663,51 @@ REFERENCES:
 
 		- A full description on the available USE flags can be found on the system in /var/db/repos/gentoo/profiles/use.desc. 
 			less /var/db/repos/gentoo/profiles/use.desc
+
+		- Get all USE variable: emerge --info | grep ^USE
+
+		File: /etc/portage/make.conf
+		Syntax: USE="-[keyword]"
 		```
-		emerge --info | grep ^USE
+		Manual:
+			# Edit /etc/portage/make.conf
+				```
+				Contents: USE="-[uses here]"
+				```
+				$EDITOR /etc/portage/make.conf
+
+				> USE="-kde -qt5 ldap"				
+
+		Automatic:
+			```
+			Syntax: echo "USE=\"-[uses here]\"" >> /etc/portage/make.conf
+			```
+			echo "USE=\"-kde -qt5 ldap\"" >> /etc/portage/make.conf
+
 
 	- (OPTIONAL) Configure the ACCEPT_LICENSE variable
 		```
 		All of the Gentoo packages are tagged with the license(s) the package falls under. 
 		This allows users to select software by specific licenses or groups of licenses prior to installing it.
-		```
-		$EDITOR /etc/portage/make.conf
-		
-		# Edit the ACCEPT_LICENSE
-			echo "ACCEPT_LICENSE=" >> /etc/portage/make.conf
 
+		File: /etc/portage/make.conf
+		Syntax: ACCEPT_LICENSE="license here"
+		```
+		Manual:
+			# Add ACCEPT_LICENSE to /etc/portage/make.conf
+				$EDITOR /etc/portage/make.conf
+		
+				# Edit the ACCEPT_LICENSE
+				> ACCEPT_LICENSE="license here"
+
+		Automatic:
+			```
+			Syntax: echo "ACCEPT_LICENSE=\"license-here\"" >> /etc/portage/make.conf
+			```
+			echo "ACCEPT_LICENSE=\"license-here\"" >> /etc/portage/make.conf
+
+
+NOTES:
 	- (OPTIONAL) Using Systemd as the init system
 		```
 		The remainder of the Gentoo Handbook focuses on OpenRC (the traditional Gentoo init system) as the default init system. 
@@ -970,7 +1048,7 @@ REFERENCE:
       						( ) Core 2/newer Xeon
       						( ) Intel Atom
       						( ) Generic-x86-64
-				Executable file formats / Emulations  --->
+				Executable file formats / Binary Emulations  --->
    					[*] IA32 Emulation
 				```
 

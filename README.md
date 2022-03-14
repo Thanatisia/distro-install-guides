@@ -27,6 +27,8 @@ My collection base-installation & post-installation install + Setup guides
 ```
 2022-03-08 2214H : 
 	- Ongoing Tests and rewriting for easier reference and understanding
+2022-03-14 1716H :
+	- Still a WIP, in testing
 ```
 
 > [Debian Installation Guide via Debootstrap](Debian)
@@ -38,6 +40,8 @@ My collection base-installation & post-installation install + Setup guides
 	- Rewriting - Not-bootable as of [2022-03-08]
 2022-03-13 0044H : 
 	- Completed first rewrite draft, to be tested
+2022-03-14 1716H : 
+	- Still a WIP, in testing
 ```
 
 > [Gentoo Installation Guide](Gentoo)
