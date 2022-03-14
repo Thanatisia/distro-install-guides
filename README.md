@@ -2,16 +2,22 @@
 
 My collection base-installation & post-installation install + Setup guides
 
-- Used and referenced in my Install Scripts found in 
-	
-	> [Arch Distro Install Script](https://github.com/Thanatisia/distro-installscript-arch)
-	
-
 ## Table of Contents:
+- Background
 - ArchLinux
 - Debian (Debootstrap)
 - Gentoo
 - VoidLinux
+
+## Background
+
+- Used and referenced in my Install Scripts found in 
+	
+	> [Arch Distro Install Script](https://github.com/Thanatisia/distro-installscript-arch)
+
+- This is part of
+	- [Linux Setup Guides - PostInstallations](https://github.com/Thanatisia/linux-postinstallations)
+	- [Linux Setup Guides - Window Manager](https://github.com/Thanatisia/linux-setup-wm)
 
 ## ArchLinux
 
