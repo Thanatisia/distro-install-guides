@@ -45,6 +45,12 @@ Partition Design:
 	2, /dev/sdX2, Root, /mnt     , primary, ext4, x2(0%|KiB|MiB|GiB...|100%), x3(0%|KiB|MiB|GiB...|100%)
 	3, /dev/sdX3, Home, /mnt/home, primary, ext4, x3(0%|KiB|MiB|GiB...|100%), x4(0%|KiB|MiB|GiB...|100%)
 
+User Design:
+	Hostname: 
+	Region: $(ls /usr/share/zoneinfo/)
+	City: $(ls /usr/share/zoneinfo/Region)
+	Locale: 
+
 #
 # BIOS / MBR (Non-UEFI)
 #
@@ -398,6 +404,8 @@ NOTE:
 - Enable multilib repository
 	```
 	If you want to run 32-bit application on your 64-bit systems, uncomment/enable the multilib repository to achieve it.
+
+	File: /etc/pacman.conf
 	```
 	- Manual:
 		$EDITOR /etc/pacman.conf
@@ -406,8 +414,12 @@ NOTE:
 		> Uncomment include = /etc/pacman.d/mirrorlist
 
 	- Automatic:
-		sed -i '/[multilib]/s/^#//g' <file>
-		sed -i '/"include = /etc/pacman.d/mirrorlist"/s/^#//g' <file>
+		```
+		Regex Pattern:
+			"/\[multilib\]/,/Include/"
+			's/^#//'
+		```
+		sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
 
 - Set sudo priviledges
 	- Manual:
