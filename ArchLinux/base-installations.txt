@@ -36,7 +36,7 @@ Device Specifications:
 	Device UUID: 
 	Device Boot: MSDOS
 
-- Partition Design:
+Partition Design:
 	Partition Schema:
 	==================================================================================================================
 	| ROW_ID, device, partition_name, mount_path, partition_format, partition_type, start_size, end_size, other_opts |
@@ -45,41 +45,7 @@ Device Specifications:
 	2, /dev/sdX2, Root, /mnt/root, primary, ext4, 1024MiB, 32768MiB
 	3, /dev/sdX3, Home, /mnt/home, primary, ext4, 32768MiB, 100%
 
-File System Table:
-	```
-	Syntax: 
-		- Creating new partition
-			parted [device_name] mkpart [partition_category] [partition_fileType] [start_size] [end_size]
-
-		- Formatting file system
-			mkfs.{filetype} {options} [device_name](partition_number)
-
-		- Formatting Swap
-			mkswap [device_name](partition_number)
-
-		- Set settings to partition
-			parted [device_name] set [partition_number] {settings}
-
-			settings:
-				boot {on|off} : Set Boot
-	```
-	# Format Partition
-		# Fat{16|32}
-			mkfs.fat -f {16|32} /dev/sdX(n)
-		# EXT4
-			mkfs.ext4 /dev/sdX(n) 
-		# Swap
-			mkswap /dev/sdX(n)
-
-	# (OPTIONAL) To set bootable on 
-		parted $device_Name set <partition> boot on
-
-	# (OPTIONAL) Setup Swap Partition
-		swapon /dev/sdX(n)
-		echo "# -- Swap Partition 1" | tee -a /etc/fstab
-		echo "UUID=device_UUID none swap defaults 0 0" | tee -a /etc/fstab
-
-
+		
 #
 # BIOS / MBR (Non-UEFI)
 #
@@ -155,31 +121,25 @@ NOTE: Please refer to [Pre-Requisite] for your design
 	NOTES:
 		> Multiple Tools for Partitioning
 		parted
-			- To clean the disk
-			parted $device_Name mklabel <msdos/efi>
-			- To Partition
-			parted $device_Name mkpart primary $partition_fileType $start_Size $end_Size
-			mkfs.<type> <device_Name><partition_Number>
-			- For Bootable Partition
-			parted $device_Name set <partition> boot on
+			Syntax: 
+				- Create Device Label (aka Reformat)
+					parted [device_name] mklabel [device_label]
 
-			Syntax:
-				parted $device_Name mklabel <msdos/gpt>
-	
-				# Partition 1 : ext4
-				parted $device_Name mkpart primary $partition_fileType 0% 1024MiB
-				mkfs.ext4 /dev/sdb1
-				parted /dev/sdb set 1 boot on
+				- Creating new partition
+					parted [device_name] mkpart [partition_type] [partition_fileType] [start_size] [end_size]
 
-				# Partition 2 : ext4
-				parted $device_Name mkpart primary $partition_fileType 1024MiB 51200MiB
-				mkfs.ext4 /dev/sdb2		
+				- Formatting file system
+					mkfs.{filetype} {options} [device_name](partition_number)
 
-				# Partition 3 : ext4
-				parted $device_Name mkpart primary $partition_fileType 51200MiB 100%
-				mkfs.ext4 /dev/sdb3
+				- Formatting Swap
+					mkswap [device_name](partition_number)
 
-			Examples:
+				- Set settings to partition
+					parted [device_name] set [partition_number] {settings}
+
+					settings:
+						boot {on|off} : Set Boot
+
 		fdisk
 		cgdisk
 	```
@@ -210,12 +170,30 @@ NOTE: Please refer to [Pre-Requisite] for your design
 		parted /dev/sdb mkpart primary ext4 51200MiB 100%
 		
 	- Format Partitions
+		```
+		Syntax: 
+			# File Type
+			- Fat{16|32}
+				mkfs.fat -f {16|32} /dev/sdX(n)
+			- EXT4
+				mkfs.ext4 /dev/sdX(n) 
+			- Swap
+				mkswap /dev/sdX(n)
+		```
 		mkfs.ext4 /dev/sdb1
 		mkfs.ext4 /dev/sdb2
 		mkfs.ext4 /dev/sdb3
 
-	- Set Boot
+	- Set Bootable
+		```
+		Syntax: parted $device_Name set <partition> boot on
+		```
 		parted /dev/sdb set 1 boot on
+
+	- (OPTIONAL) Setup Swap Partition
+		swapon /dev/sdX(n)
+		echo "# -- Swap Partition 1" | tee -a /etc/fstab
+		echo "UUID=device_UUID none swap defaults 0 0" | tee -a /etc/fstab
 
 
 #=====================#
