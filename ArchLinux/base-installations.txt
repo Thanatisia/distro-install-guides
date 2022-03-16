@@ -41,8 +41,8 @@ Partition Design:
 	==================================================================================================================
 	| ROW_ID, device, partition_name, mount_path, partition_format, partition_type, start_size, end_size, other_opts |
 	==================================================================================================================
-	1, /dev/sdX1, Boot, /mnt/boot, primary, ext4, 0%, 1024MiB, Bootable
-	2, /dev/sdX2, Root, /mnt/root, primary, ext4, 1024MiB, 32768MiB
+	1, /dev/sdX1, Boot, /mnt/boot, primary, ext4, 0%,	1024MiB, Bootable
+	2, /dev/sdX2, Root, /mnt     , primary, ext4, 1024MiB,	32768MiB
 	3, /dev/sdX3, Home, /mnt/home, primary, ext4, 32768MiB, 100%
 
 		
@@ -128,7 +128,7 @@ NOTE: Please refer to [Pre-Requisite] for your design
 				- Creating new partition
 					parted [device_name] mkpart [partition_type] [partition_fileType] [start_size] [end_size]
 
-				- Formatting file system
+				- Formatting file system/partition
 					mkfs.{filetype} {options} [device_name](partition_number)
 
 				- Formatting Swap
@@ -145,29 +145,51 @@ NOTE: Please refer to [Pre-Requisite] for your design
 	```
 	- Create Device Label
 		```
-		device_Name = /dev/sdb
-		label type = msdos
+		let:
+			device_Name = /dev/sdb
+			device_Size = 51200MiB (50GB)
+			label type = msdos
 		```
 		parted /dev/sdb mklabel msdos
 
 	- Create Partitions
 		```
-		Partition 1
-		- File Type : ext4
-		```
-		parted /dev/sdb mkpart primary ext4 0% 1024MiB
+		Syntax: parted [device_name] mkpart [partition_type] [partition_fileType] [start_size] [end_size]
 
+		Example:
+			/dev/sdb1 Boot /mnt/boot primary ext4 0% 	1024MiB	 Bootable
+			/dev/sdb2 Root /mnt      primary ext4 1024MiB 	32768MiB
+			/dev/sdb3 Home /mnt/home primary ext4 32768MiB	100%
 		```
-		Partition 2 
-		- File Type : ext4
-		```
-		parted /dev/sdb mkpart primary ext4 1024MiB 51200MiB		
+		- Partition 1
+			```
+			let
+			- Partition Type : primary
+			- Partition File Type : ext4
+			- Partition Start Size : 0% (From the start)
+			- Partition End Size : 1024MiB
+			```
+			parted /dev/sdb mkpart primary ext4 0% 1024MiB
 
-		``` 
-		Partition 3
-		- File Type : ext4
-		```
-		parted /dev/sdb mkpart primary ext4 51200MiB 100%
+		- Partition 2 
+			```
+			let
+			- Partition Type : primary
+			- Partition File Type : ext4
+			- Partition Start Size : 1024MiB
+			- Partition End Size : 32768MiB
+			```
+			parted /dev/sdb mkpart primary ext4 1024MiB 32768MiB		
+
+		- Partition 3
+			```
+			let
+			- Partition Type : primary
+			- Partition File Type : ext4
+			- Partition Start Size : 32768MiB
+			- Partition End Size : 100% (To the end)
+			```
+			parted /dev/sdb mkpart primary ext4 32768MiB 100%
 		
 	- Format Partitions
 		```
