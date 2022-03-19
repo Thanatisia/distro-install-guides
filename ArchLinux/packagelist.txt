@@ -1,6 +1,6 @@
 + [Audio]
 	#--- Terminal
-	alsa
+	alsa-utils
 	#--- GUI
 	pulseaudio
 
