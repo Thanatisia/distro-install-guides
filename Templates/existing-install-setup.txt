@@ -1,0 +1,197 @@
+#=======================================#
+# Pre-Installation Setup Guide for	#
+#	Existing Linux Installations 	#
+#=======================================#
+
+Things to take note of when/if you are installing from an existing Linux distribution/install
+
+
+Table of Contents:
+	- Create a chroot environment
+	- Preparation to use chroot environment
+
+Distros:
+	- ArchLinux
+		- Create a chroot environment
+			- Using the Bootstrap Image
+				- Download ArchLinux Bootstrap Image
+					```
+					URL: https://archlinux.org/download/
+					Mirror: {download-mirror}/mirror/archlinux/iso/[date]/archlinux-bootstrap-[date]-[architecture].tar.gz
+					Recommended Destination: /tmp
+
+					Steps:
+						1. Select a mirror to download ArchLinux Bootstrap Image
+						2. Download ArchLinux Bootstrap Tarball
+
+					Syntax: wget {mirror}/archlinux/iso/latest/archlinux-bootstrap-[date]-[architecture].tar.gz -P /tmp
+					```
+					wget {download-mirror}/mirror/archlinux/iso/latest/archlinux-bootstrap-[date]-[architecture].tar.gz -P /tmp
+
+				- Extract the tarball
+					```
+					Syntax: tar xzf [path-to-bootstrap-image]/archlinux-bootstrap-[date]-[architecture].tar.gz --numeric-owner
+
+					Parameters:
+						--numeric-owner: Preserve correct UID and GID numbers of extracted files in case your existing linux system uses different numbers than ArchLinux
+		
+					Recommended Architecture:
+						x86_64 : Typical PC's x86/64 architecture
+					```
+					tar xzf [path-to-bootstrap-image]/archlinux-bootstrap-*-x86_64.tar.gz --numeric-owner
+
+				- (OPTIONAL) Select a repository server
+					```
+					Edit [/tmp/root.x86_64/etc/pacman.d/mirrorlist]
+					```
+
+				- Enter the chroot
+					- Arch-Chroot
+						- If Bash 4 or later is installed
+							```
+							Unshare supports the options
+								--fork
+								--pid
+	
+							Root: /tmp/root.x86_64
+							```
+							/tmp/root.x86_64/bin/arch-chroot /tmp/root.x86_64/
+
+						- Using native arch-chroot
+							```
+							Package: arch-install-scripts
+							```
+							- Install package
+								sudo pacman -S arch-install-scripts
+
+							- Chroot into root
+								arch-chroot /tmp/root.x86_64
+	
+					- Else
+						```
+						This method is what arch-chroot does
+						- Similar to what gentoo and debian (debootstrap) uses too without Arch-chroot
+						```
+						- Mount all required directories
+							mount --bind /tmp/root.x86_64 /tmp/root.x86_64
+							cd /tmp/root.x86_64
+							cp /etc/resolv.conf etc
+							mount -t proc /proc proc
+							mount --make-rslave --rbind /sys sys
+							mount --make-rslave --rbind /dev dev
+							mount --make-rslave --rbind /run run	# (assuming /run exists on the system)
+
+						- Chroot into root
+							chroot /tmp/root.x86_64 /bin/bash
+
+			- Using the LiveCD Image
+				```
+				'Unsquash' and mount the root image of the latest ArchLinux installation media then chroot into it
+
+				Pre-Requisites:
+					- Ensure that you have 'squashfs' installed
+						- Squashfs is used by all distros to create live cd and live iso 
+							- Useful if you want to make your own live cd and live iso
+							- Useful for updating your live cd or
+								- Modifying an existing live cd to make a custom live cd
+						- Squashfs is Read-Only, thus the 'squashed' live cd cannot be modified without unsquashing first
+				```
+				- Download LiveCD Image
+					```
+					URL: https://archlinux.org/download/
+					Mirror: {download-mirror}/mirror/archlinux/iso/latest/arch/x86_64/
+					File: airootfs.sfs
+					Recommended Destination: /tmp
+
+					Steps:
+						1. Select a mirror to download ArchLinux Bootstrap Image
+						2. Download ArchLinux Bootstrap Tarball
+
+					Syntax: wget {mirror}/archlinux/iso/latest/arch/x86_64/airootfs.sfs -P /tmp
+					```
+					wget {download-mirror}/mirror/archlinux/iso/latest/arch/x86_64/airootfs.sfs -P /tmp
+
+				- Unsquash root image
+					```
+					Syntax: unsquashfs [squashfs file]
+					```
+					unsquashfs airootfs.sfs
+
+				- (OPTIONAL) Select a repository server
+					```
+					Edit [squashfs-root/etc/pacman.d/mirrorlist]
+					```
+
+				- Before Chrooting
+					- Setup Mount points
+						mount --bind squashfs-root squashfs-root
+						mount -t proc none squashfs-root/proc
+						mount -t sysfs none squashfs-root/sys
+						mount -o bind /dev squasfs-root/dev
+						mount -o bind /dev/pts squashfs-root/dev/pts	## Important for pacman (for signature checks)
+			
+					- Copy resolv.conf for networking
+						cp -L /etc/resolv.conf squashfs-root/etc	## This is needed to use networking within the chroot
+
+				- Chroot into the newly installed Arch environment
+					```
+					Syntax: chroot [root-directory] [shell]
+					```
+					chroot squashfs-root bash
+
+		- Using a chroot environment
+			```
+			The bootstrap environment is really barebones
+				- no packages at all
+
+			- Need to setup pacman in order to download other necessary packages
+			```
+			- Initialize pacman keyring
+				```
+				Before starting the installation
+				- pacman keys need to be setup
+
+				NOTE:
+					- Initializing the keyring requires entropy
+						- To generate 'entropy', you need to
+							- Move your mouse around
+							- Press random characters on the keyboard
+							- Run some disk-based activity
+						- The more action you perform, the faster it will get
+							- Otherwise by default, the signing will take a long time
+
+				Reference: https://wiki.archlinux.org/title/Pacman/Package_signing#Initializing_the_keyring
+				```
+				- Initialize pacman key
+					pacman-key --init
+
+				- Verifying the master keys
+					pacman-key --populate archlinux
+
+			- Downloading basic tools
+				```
+				After pacman keyring is initialized
+				```
+				- Refresh the package list
+					```
+					Update and Upgrade
+
+					Syntax: pacman -Syyu
+					```
+					sudo pacman -Syyu
+			
+				- Install essential packages
+					```
+					Recommended:
+						base-devel
+						parted
+						vim
+
+					Note:
+						- If you encountered the error 'error : could not determine cachedir mount point /var/cache/pacman/pkg'
+							- Workaround: mount --bind [directory-to-livecd-or-bootstrap] [directory-to-livecd-or-bootstrap]
+					```
+					sudo pacman -S base-devel \
+							parted    \
+							vim	  \
+
