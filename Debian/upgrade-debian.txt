@@ -1,0 +1,104 @@
+#========================#
+# Debian - Upgrade Guide #
+#========================#
+
+Documentation and Guide on how to upgrade from your current version to any other version
+
+Preferably to the next version
+
+
+## Table of Contents:
+
+* Pre-Requisites
+* Steps
+
+## Pre-Requisites
+
+- Backup 
+	- System
+		```
+		Always backup your system before proceeding
+
+		- Be prepared
+		```
+
+		- Using tar
+			```
+			Syntax: tar -cvzf [output-file] [target-files]
+			```
+			tar -cvzf /tmp/home.tar.gz /home
+	
+	- Packages
+		```
+		To create a 'requirements.txt' list to restore all installed packages
+		```
+
+		- Distros
+			- Debian
+				```
+				List all installed packages and output
+				Syntax: apt-get list | tee -a requirements.txt
+				```
+
+			- Arch
+				```
+				List all installed packages and output
+				Syntax: pacman -Qq | tee -a requirements.txt
+				```
+
+- Update and Upgrade Existing Packages
+	```
+	Syntax: sudo apt update && sudo apt ugrade
+	```
+	sudo apt update && sudo apt upgrade
+
+- Reboot system
+	sudo reboot now
+
+## Steps
+
+- Edit the file /etc/apt/sources.list 
+	- Replace instance of current version codename with the codename of the next version	
+		```
+		let current version be [buster] (debian 10) 
+			and
+		let next version be [bullseye] (debian 11)
+
+		using a text editor and 
+		- replace each instance of [buster] with [bullseye]. 
+		```
+		- Automatic
+			```
+			Syntax: sed -i 's/old-text/new-text/g' filename
+			```
+			sed -i 's/buster/bullseye/g' /etc/apt/sources.list
+
+	- Next find the security line, 
+		```
+		replace keyword [buster/updates] with [bullseye-security]
+		```
+		- Automatic
+			```
+			Syntax: sed -i 's/old-text/new-text/g' filename
+
+			Explanation:
+				s : Substitute command of sed for find all occurences of 'old-text' and replace with 'new-text'
+			```
+			sed -i 's/"buster/updates"/"bullseye-security"/g' /etc/apt/sources.list
+
+
+- Update the packages index on Debian Linux, 
+	sudo apt update
+	
+
+- Prepare for the operating system upgrade
+	sudo apt upgrade
+
+- Finally, update Debian 10 to Debian 11 bullseye
+	sudo apt full-upgrade
+
+- Reboot the Linux system so that you can boot into Debian 11 Bullseye
+	sudo reboot now
+
+- Verify that everything is working correctly
+	

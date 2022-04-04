@@ -192,3 +192,5 @@ Table of Contents:
 			sudo pacman -S base-devel \
 					parted    \
 					vim	  \
+
+- Proceed to ArchLinux Base Installation Guide [Step 5 : Mount Disks]

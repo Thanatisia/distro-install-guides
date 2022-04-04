@@ -51,6 +51,8 @@ User Design:
 	City: $(ls /usr/share/zoneinfo/Region)
 	Locale: 
 
+Base Packages:
+
 #
 # BIOS / MBR (Non-UEFI)
 #

@@ -33,21 +33,53 @@ Table of Contents:
 
 [MBR (MSDOS)]
 Device Specifications:
-	Device ID: 
-	Device Type: MicroSD
-	Device Name: /dev/sdb
-	Device Size: 51200MiB
+	Disk ID: 
+	Disk Type: MicroSD
+	Disk Name: /dev/sdb
+	Disk Size: 51200MiB
 	Device UUID: 
-	Device Boot: MSDOS
+	Partition Table: MSDOS
 
 Partition Design:
-	Partition Schema:
+	Bootloader: grub
+
+	Partition Schema [MSDOS (MBR/BIOS)]:
 	==================================================================================================================
-	| ROW_ID, device, partition_name, mount_path, partition_format, partition_type, start_size, end_size, other_opts |
+	| ROW_ID, device, partition_name, mount_path, partition_type, filesystem_type, start_size, end_size, other_opts |
 	==================================================================================================================
 	1, /dev/sdX1, Boot, /mnt/boot, primary, ext4, 0%,	1024MiB, Bootable
 	2, /dev/sdX2, Root, /mnt     , primary, ext4, 1024MiB,	32768MiB
 	3, /dev/sdX3, Home, /mnt/home, primary, ext4, 32768MiB, 100%
+
+	Partition Schema [GPT (UEFI)]:
+	==================================================================================================================
+	| ROW_ID, device, partition_label, mount_path, filesystem_type, start_size, end_size, other_opts |
+	==================================================================================================================
+	1, /dev/sdX1, Boot, /mnt/boot, ext4, 0%,	1024MiB, Bootable
+	2, /dev/sdX2, Root, /mnt     , ext4, 1024MiB,	32768MiB
+	3, /dev/sdX3, Home, /mnt/home, ext4, 32768MiB, 100%
+
+User Design:
+	Region: $(ls /usr/share/zoneinfo/)
+	City: $(ls /usr/share/zoneinfo/Region)
+	Locale: en_SG.UTF-8
+
+Networking:
+	Hostname: ArchLinux
+
+Base Packages:
+	base
+	linux
+	linux-firmware
+	linux-lts
+	linux-lts-headers
+	base-devel
+	vim
+	networkmanager
+
+PostInstall Packages:
+	neofetch
+	htop
 
 #============================#
 # 0. Host System Preparation #
@@ -251,6 +283,8 @@ Partition Design:
 					parted    \
 					vim	  \
 
+- Proceed to ArchLinux Base Installation Guide [Step 5 : Mount Disks]
+
 	
 #=============================#
 # Step 1: Set Keyboard Layout #
@@ -312,13 +346,16 @@ NOTE: Please refer to [Pre-Requisite] for your design
 		parted
 			Syntax: 
 				- Create Device Label (aka Reformat)
-					parted [device_name] mklabel [device_label]
+					parted [device_name] mklabel [partition_table]
 
 				- Creating new partition
-					parted [device_name] mkpart [partition_type] [partition_fileType] [start_size] [end_size]
+					- If Partition Table is MSDOS (MBR/BIOS)
+						parted [device_name] mkpart [partition_type] [filesystem_Type] [start_size] [end_size]
+					- If Partition Table is GPT (UEFI)
+						parted [device_name] mkpart [partition_label] [filesystem_Type] [start_size] [end_size]
 
 				- Formatting file system/partition
-					mkfs.{filetype} {options} [device_name](partition_number)
+					mkfs.{filesystem-type} {options} [device_name](partition_number)
 
 				- Formatting Swap
 					mkswap [device_name](partition_number)
@@ -327,58 +364,119 @@ NOTE: Please refer to [Pre-Requisite] for your design
 					parted [device_name] set [partition_number] {settings}
 
 					settings:
-						boot {on|off} : Set Boot
+						- boot {on|off} : Set Boot to Boot Partition of MSDOS (MBR/BIOS) Partition Table
+						- esp {on|off} : Set Boot to Boot Partition of GPT Partition Table
 
 		fdisk
 		cgdisk
+
+		- Disk Label:
+			* Create a [gpt] Disklabel type if the partition is GPT (UEFI) or 
+			* Create a [msdos] Disklabel type if the partition is MBR (BIOS)
+
+		- Partitions:
+			* In every instance in a GPT/(U)EFI Partition Table
+				- A special bootable EFI system partition is required
+					- Similar to MSDOS (BIOS/MBR)'s Boot Partition
+				- Requires FAT32 while MSDOS's Boot Partition Requires EXT4
+			* EFI system partition on a MBR partition table is identified by the Partition Type ID [EF]
 	```
 	- Create Device Label
 		```
 		let:
 			device_Name = /dev/sdb
 			device_Size = 51200MiB (50GB)
-			label type = msdos
 		```
-		parted /dev/sdb mklabel msdos
+		- If Partition Table is [msdos (MBR/BIOS)]
+			```
+			label type = msdos
+			```
+			parted /dev/sdb mklabel msdos
+
+		- If Partition Table is [gpt (UEFI)]
+			```
+			label type = gpt
+			```
+			parted /dev/sdb mklabel gpt
 
 	- Create Partitions
-		```
-		Syntax: parted [device_name] mkpart [partition_type] [partition_fileType] [start_size] [end_size]
+		- If Partition Table is MSDOS (MBR/BIOS)
+			```
+			Syntax: parted [device_name] mkpart [partition_type] [partition_fileType] [start_size] [end_size]
+	
+			Example:
+				/dev/sdb1 Boot /mnt/boot primary ext4 0% 	1024MiB	 Bootable
+				/dev/sdb2 Root /mnt      primary ext4 1024MiB 	32768MiB
+				/dev/sdb3 Home /mnt/home primary ext4 32768MiB	100%
+			```
+			- Partition 1
+				```
+				let
+				- Partition Type : primary
+				- Partition File Type : ext4
+				- Partition Start Size : 0% (From the start)
+				- Partition End Size : 1024MiB
+				```
+				parted /dev/sdb mkpart primary ext4 0% 1024MiB
 
-		Example:
-			/dev/sdb1 Boot /mnt/boot primary ext4 0% 	1024MiB	 Bootable
-			/dev/sdb2 Root /mnt      primary ext4 1024MiB 	32768MiB
-			/dev/sdb3 Home /mnt/home primary ext4 32768MiB	100%
-		```
-		- Partition 1
-			```
-			let
-			- Partition Type : primary
-			- Partition File Type : ext4
-			- Partition Start Size : 0% (From the start)
-			- Partition End Size : 1024MiB
-			```
-			parted /dev/sdb mkpart primary ext4 0% 1024MiB
+			- Partition 2 
+				```
+				let
+				- Partition Type : primary
+				- Partition File Type : ext4
+				- Partition Start Size : 1024MiB
+				- Partition End Size : 32768MiB
+				```
+				parted /dev/sdb mkpart primary ext4 1024MiB 32768MiB		
 
-		- Partition 2 
-			```
-			let
-			- Partition Type : primary
-			- Partition File Type : ext4
-			- Partition Start Size : 1024MiB
-			- Partition End Size : 32768MiB
-			```
-			parted /dev/sdb mkpart primary ext4 1024MiB 32768MiB		
+			- Partition 3
+				```
+				let
+				- Partition Type : primary
+				- Partition File Type : ext4
+				- Partition Start Size : 32768MiB
+				- Partition End Size : 100% (To the end)
+				```
+				parted /dev/sdb mkpart primary ext4 32768MiB 100%
 
-		- Partition 3
+		- If Partition Table is GPT (UEFI)
 			```
-			let
-			- Partition Type : primary
-			- Partition File Type : ext4
-			- Partition Start Size : 32768MiB
-			- Partition End Size : 100% (To the end)
+			Syntax: parted [device_name] mkpart [partition_label] [partition_fileType] [start_size] [end_size]
+	
+			Example:
+				/dev/sdb1 Boot /mnt/boot fat32 0% 	1024MiB	 Bootable
+				/dev/sdb2 Root /mnt      ext4 1024MiB 	32768MiB
+				/dev/sdb3 Home /mnt/home ext4 32768MiB	100%
 			```
-			parted /dev/sdb mkpart primary ext4 32768MiB 100%
+			- Partition 1
+				```
+				let
+				- Partition Label : Boot
+				- Partition File Type : fat32
+				- Partition Start Size : 0% (From the start)
+				- Partition End Size : 1024MiB
+				```
+				parted /dev/sdb mkpart "Boot" ext4 0% 1024MiB
+
+			- Partition 2 
+				```
+				let
+				- Partition Label : Root
+				- Partition File Type : ext4
+				- Partition Start Size : 1024MiB
+				- Partition End Size : 32768MiB
+				```
+				parted /dev/sdb mkpart "Root" ext4 1024MiB 32768MiB		
+
+			- Partition 3
+				```
+				let
+				- Partition Label : Home
+				- Partition File Type : ext4
+				- Partition Start Size : 32768MiB
+				- Partition End Size : 100% (To the end)
+				```
+				parted /dev/sdb mkpart "Home" ext4 32768MiB 100%
 		
 	- Format Partitions
 		```
@@ -391,20 +489,31 @@ NOTE: Please refer to [Pre-Requisite] for your design
 			- Swap
 				mkswap /dev/sdX(n)
 		```
-		mkfs.ext4 /dev/sdb1
+		- If Partition Table is GPT (UEFI)
+			mkfs.fat -F32 /dev/sdb1
+		- If Partition Table is MSDOS (MBR/BIOS)
+			mkfs.ext4 /dev/sdb1
 		mkfs.ext4 /dev/sdb2
 		mkfs.ext4 /dev/sdb3
 
 	- Set Bootable
-		```
-		Syntax: parted $device_Name set <partition> boot on
-		```
-		parted /dev/sdb set 1 boot on
+		- If Partition Table is MSDOS (MBR/BIOS)
+			```
+			Syntax: parted $device_Name set <partition> boot on
+			```
+			parted /dev/sdb set 1 boot on
+		- If Partition Table is GPT (UEFI)
+			```
+			Syntax: parted $device_Name set <partition> esp on
+			```
+			parted /dev/sdb set 1 esp on		
 
 	- (OPTIONAL) Setup Swap Partition
 		swapon /dev/sdX(n)
-		echo "# -- Swap Partition 1" | tee -a /etc/fstab
-		echo "UUID=device_UUID none swap defaults 0 0" | tee -a /etc/fstab
+
+		- After chroot
+			echo "# -- Swap Partition 1" | tee -a /etc/fstab
+			echo "UUID=device_UUID none swap defaults 0 0" | tee -a /etc/fstab
 
 
 #=====================#
@@ -418,6 +527,13 @@ NOTE: Please refer to [Pre-Requisite] for your design
 	- Home directory
 		mkdir -p /mnt/home
 	- Boot directory
+		```
+		If Partition Table is GPT (UEFI):
+			Typical Boot Partition Mount Points
+				/boot : The usual boot partition mount point and is the preferred method when directly booting on EFISTUB kernel from UEFI or booting it via a boot manager like systemd-boot
+				/efi : Is a replacement for the previously popular (and is possibly still used by other Linux distros) ESP mountpoint [/boot/efi]
+					- Use a bootloader which is capable of accessing the kernel(s) and initramfs image(s) that are stored elsewhere - typically /boot
+		```
 		mkdir -p /mnt/boot/grub
 
 - Mount remaining directories
@@ -455,16 +571,118 @@ pacstrap /mnt base linux linux-firmware <Optional> <additional-packages>
 #============================================#
 # Step 8: Generate fstab (File System Table) #
 #============================================#
-```
-Generate an fstab file (use -U or -L to define by UUID or labels, respectively): 
-```
-genfstab -U /mnt >> /mnt/etc/fstab
+
+- Automatic (using genfstab)
+	- Pre-Requisite: 
+		- If genfstab is not installed / Using another distro:
+			```
+			Package Name : arch-install-scripts
+			```
+			- If Distro is Debian:
+				sudo apt(-get) install arch-install-scripts
+			- If Distro is Arch:
+				sudo pacman -S arch-install-scripts
+
+	- Generate filesystem table
+		```
+		Generate an fstab file (use -U or -L to define by UUID or labels, respectively)
+		Syntax: genfstab {options} [root-mount-point] >> {mount-point}/etc/fstab
+		Options:
+			-U : To get the UUID of the partitions
+			-L : To get the label of the partitions
+		```
+		genfstab -U /mnt >> /mnt/etc/fstab
+
+	- Verify fstab file
+		```
+		File: {mount-point}/etc/fstab
+		```
+		cat /mnt/etc/fstab
 
 #================#
 # Step 9: Chroot #
 #================#
-- Change Root into the new system via arch-chroot
-	arch-chroot /mnt
+
+- Change Root into the new system 
+	- via arch-chroot
+		```
+		Syntax: arch-chroot [chroot-mount-point] [command-to-execute]
+		```
+		- Pre-Requisite: 
+			- If is not installed / Using another distro:
+			```
+			Package Name : arch-install-scripts
+			```
+			- If Distro is Debian:
+				sudo apt(-get) install arch-install-scripts
+			- If Distro is Arch:
+				sudo pacman -S arch-install-scripts
+
+		- Change Root to mount point
+			arch-chroot /mnt
+
+	- via chroot
+		```	
+		Resource : https://wiki.archlinux.org/title/Chroot
+		NOTE:
+			- When using --rbind, some subdirectories of dev/ and sys/ will not be unmountable. 
+				- Attempting to unmount with umount -l in this situation will break your session, requiring a reboot. 
+				- If possible, use -o bind instead.
+		```
+		- Change Directory to location of new root
+			cd [mount-point]
+		- Mount temporary API filesystems
+			mount -t proc /proc [mount-point]/proc/
+			mount -t sysfs /sys [mount-point]/sys/
+			mount --rbind /dev [mount-point]/dev/
+		- (OPTIONAL) Mount /run
+			mount --rbind /run [mount-point]/run/
+
+		- (OPTIONAL) If your Partition Table is GPT (UEFI)
+			```
+			Need access to EFI variables. Otherwise, when installing GRUB, you will receive a message similar to "UEFI variables not supported on this machine"
+			```
+			mount --rbind /sys/firmware/efi/efivars [mount-point]/sys/firmware/efi/efivars/
+
+		- Copy over DNS details to the Chroot environment
+			```
+			- In order to use an internet connection
+			```
+			cp /etc/resolv.conf [mount-point]/etc/resolv.conf
+
+		- Change Root to mount point
+			```
+			Syntax: chroot [mount-point] [shell]
+
+			NOTE:
+				- Error [chroot: cannot run command '/usr/bin/bash': Exec format error] : Architectures of the host environment and chroot environment do not match
+				- Error [chroot: '/usr/bin/bash': permission denied] : Remount it with the execute permission - [mount -o remount,exec <new_root>]
+			```
+			chroot /mnt /bin/bash
+
+		- (OPTIONAL) Load the local bash config
+			```
+			Syntax: source [file]
+			```
+			source /etc/profile
+			source ~/.bashrc
+
+		- (OPTIONAL) Create a unique prompt 
+			```
+			to be able to differentiate your chroot environment
+
+			Note:
+				PS1 : Main terminal/command line prompt that you see when typing
+			```
+			export PS1="(chroot) $PS1"
+
+		- To Unmount
+			```
+			Syntaxes:
+				umount --recursive [mount-point]	: Recursively unmount all
+				umount -l [mount-point]			: Lazy unmount / force
+			```
+			umount -l /mnt
 
 - Set Time Zone
 	- Search for your Time Zone
@@ -554,6 +772,7 @@ genfstab -U /mnt >> /mnt/etc/fstab
 			```
 			If distro is Arch-Based:
 				sudo pacman -S os-prober
+
 		- Install Grub Package
 			If distro is Arch-Based:
 				sudo pacman -S grub
@@ -565,9 +784,71 @@ genfstab -U /mnt >> /mnt/etc/fstab
 				--debug : To view sysout messsges
 				--boot-directory=/boot/
 			```
-			grub-install --target=i386-pc --debug (optionals) /dev/sdX
+			- If Partition Table is MSDOS (MBR/BIOS)
+				```
+				Syntax: grub-install {options} [disk_name]
+				Options:
+					--target=[architecture] : Install grub for that architecture
+
+				NOTE:
+					- disk_name is the disk - not a partition - where GRUB is to be installed
+						Examples:
+							* /dev/sdX
+							* /dev/nvme0n1
+							* /dev/mmcblk0
+				```
+				grub-install --target=i386-pc --debug (optionals) /dev/sdX
+
+			- If Partition Table is GPT (UEFI)
+				```
+				Syntax: grub-install --target=[architecture]-efi --efi-directory=[boot-directory] --bootloader-id=GRUB
+
+				Architectures: 
+					* x86_64
+				```
+				- Pre-Requisites:
+					- Install packages [grub, efibootmgr]
+						```
+						- Grub is the bootloader (if you havent installed it yet)
+						- efibootmgr is used by the GRUB installation script to write boot entries to NVRAM. 
+						```
+					- Ensure the EFI system partition (aka boot partition for GPT (UEFI) partition table) is mounted
+						```
+						Substitute [esp] in the syntaxes with mount point
+						```
+						lsblk
+
+				- Choose a bootloader identifier
+					```
+					A Bootloader ID/Name that will appear in the UEFI boot menu to identify the GRUB boot entry
+					- A directory of that name will be created in [{mount-point}/{boot-directory}/EFI/] to store the EFI binary
+					Example: GRUB
+					```
+
+				- Install GRUB EFI application [grubx64/efi] => [{mount-point}/{boot-directory}/EFI/GRUB/] and
+					Install its modules to [/boot/grub/x86_64-efi/]
+					```
+					NOTE:
+						- Make sure to install the packages and run the grub-install command from the system in which GRUB will be installed as the boot loader. 
+							- That means if you are booting from the live installation environment, you need to be inside the chroot when running grub-install. 
+							- If for some reason it is necessary to run grub-install from outside of the installed system, 
+								- append the --boot-directory= option with the path to the mounted /boot directory, 
+								- e.g --boot-directory=/mnt/boot
+
+					Output: The main GRUB directory is located at /boot/grub/
+						- grub-install also tries to create an entry in the [firmware boot manager] named the Bootloader ID
+							- Will fail if your boot entries are full
+							- Use 'efibootmgr' to remove unnecessary entries
+					```
+					grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
 
 		- Create Grub Config
+			```
+			GRUB loads the /boot/grub/grub.cfg configuration file each boot
+
+			NOTE:
+				- After installing or removing a kernel, you just need to re-run this section
+			```
 			grub-mkconfig -o /boot/grub/grub.cfg
 
 	- Syslinux
