@@ -45,9 +45,14 @@ Please reference and follow the steps in [Pre-Requisites/General Flow.md](Pre-Re
 - 2023-02-16 1557H : 
     + Tested, Working and contains the plans, what will be the template to remodel the other distribution guides after.
     + Pre-Requisites are found in [Pre-Installation General Flow Guide](Pre-Requisites) which is a mirror/reference to [My SharedSpace Repository](https://github.com/Thanatisia/SharedSpace/blob/main/Docs/Linux/Guides/Setup/General%20Flow.md)
+- 2023-02-17 1411H
+    + Cleaned up folder to only contain debian-based or usable files
 
 - Folders
     + [Debian Installation Guide via Debootstrap (amd64)](Debian/amd64)
+
+### General
+> Distribution-agnostic Documentation and guides
 
 ### Gentoo
 
