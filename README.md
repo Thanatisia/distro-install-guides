@@ -8,6 +8,7 @@ My collection base-installation & post-installation install + Setup guides
     - [ArchLinux](#archlinux)
     - [Debian (Debootstrap)](#debian-debootstrap)
     - [Gentoo](#gentoo)
+    - [Fedora](#fedora)
     - [VoidLinux](#voidlinux)
     - [Templates](#templates)
 - [References](#references)
@@ -65,6 +66,14 @@ Please reference and follow the steps in [Pre-Requisites/General Flow.md](Pre-Re
 
 - Folders
     + [Gentoo Installation Guide](Gentoo)
+
+### Fedora
+
+- 2023-03-05 2308 : 
+    + Finished writing documentation
+    + Performing testing and debugging
+    - Issues Encountered
+        + using ArchLinux has 'systemd-fsck: e2fsck has incompatible feature' error
 
 ### VoidLinux
 
