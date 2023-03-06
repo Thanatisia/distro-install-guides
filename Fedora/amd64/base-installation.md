@@ -74,6 +74,14 @@
 - NOTES
 	+ Please refer to [Partition Configuration Schema/Design](#partition-configuration-schema-design) for the Partition Management schema and reference it when creating the Disks
 	+ Partitioning and formatting of Disk labels are permanent, please be extra careful here
+	- Please take precaution when using a Rolling Release distribution such as ArchLinux for installing Fedora
+		+ This is because the mke2fs (mkfs.ext4) version may be higher than that of Fedora's supported, thus the fedora system may not be able to boot properly
+		- I am testing development using ArchLinux, however, for certain reasons, using ArchLinux to install Fedora from command line via bootstrapping worked, but it is unable to boot properly.
+			+ Error encountered: Fedora failed to start systemd-fsck-root.service
+		- To check the mkfs version (mke2fs)
+			```console
+			mkfs.ext4 -V
+			```
 
 - Verify disk/device/file block
 	+ Note the device names (i.e. /dev/sdX)
@@ -333,10 +341,11 @@
 2. (OPTIONAL) Preparation and Pre-Requisites 
 	- If you are using a Fedora/RPM-based distribution (or the LiveISO)
 		- Disable SELinux
+			+ SELinux is a PolicyKit (polkit), basically a security manager
 			+ SELinux can be very limiting
 			+ In my experience, SELinux enabled prevented the chroot from changing the root password
 			```console
-			sudo enforce 0
+			sudo setenforce 0
 			```
 	- If you are using a non-fedora/RPM distribution
 		- Notes
@@ -648,6 +657,9 @@
 		- Grub
 			- Information
 				+ grub in dnf is aliased as 'grub2'
+				- The following are add-ons to my general installation/setup steps for the GRUB bootloader as referenced in my [Bootloaders Documentation - GRUB](https://github.com/Thanatisia/SharedSpace/blob/main/Docs/Linux/Guides/Bootloaders/Grub/basics.md), with the following information pertaining to Fedora (dnf/rpm).
+					+ Fedora (dnf/rpm) uses different specifications as compared to Debian, ArchLinux and Gentoo's structure.
+					+ Please refer to this if you would like to see a more detailed writeup and/or the general steps used by Debian, ArchLinux and Gentoo
 			- Install essential packages
 				- MBR/MSDOS (BIOS)
 					```console
@@ -661,13 +673,17 @@
 					```console
 					dnf install grub2-efi-x64 grub2-efi-x64-modules shim
 					```
-			- If Partition Table is
-				- MBR (MSDOS)
-					+ Install grub to boot partition and partition table
+			- Install grub to boot partition and partition table
+				- If Partition Table is
+					- MBR (MSDOS)
 						```console
 						grub2-install --target=[architecture] {--debug} [disk-label]
 						```
-			- Update grub
+					- GPT (UEFI)
+						```console
+						grub2-install --target=[architecture] --efi-directory=[your-EFI-system/boot-partition] --bootloader-id=GRUB {other options} [device_Label]
+						```
+			- Update grub configuration file
 				- MBR/MSDOS (BIOS)
 					- Make grub configuration file
 						```console
@@ -693,6 +709,37 @@
 				```console
 				sudo dracut --regenerate-all --force
 				```
+	- Manage SELinux
+		- Change SELinux to Permissive/Passive by default
+			- Information
+				- SELinux in Fedora is installed and set to Enforced by default
+					+ This can become very bulky and intrusive, especially seen in the startup/bootup process
+				- SELinux configurations can be located in '/etc/selinux'
+				- SELinux Permission values
+					+ Enforcing : SELinux security policy is enforced
+					+ Permissive : Prints warnings instead of enforcing
+					+ Disabled : No SELinux Policy is loaded
+			- Manually
+				- Edit the SELinux configuration file
+					+ Config file is in '/etc/selinux/config'
+					+ The config file is symlinked to '/etc/sysconfig/selinux
+					```console
+					$EDITOR /etc/selinux/config
+					```
+				- Change the value of the variable 'SELINUX' into 'Permissive'
+					```console
+					SELINUX=permissive
+					```
+			- Automatically using sed
+				- Comment out 'SELINUX=enforcing'
+					```console
+					sed -i '/SELINUX=enforcing/s/^/#/g' /etc/sysconfig/selinux
+					```
+				- Append 'SELINUX=permissive' into selinux config
+					+ Either '/etc/sysconfig/selinux' or '/etc/selinux/config'
+					```console
+					echo -e "SELINUX=permissive" | sudo tee -a /etc/sysconfig/selinux
+					```
 	- User Management
 		- Create user
 			- Synopsis/Syntax
