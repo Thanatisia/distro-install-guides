@@ -92,7 +92,7 @@ Void is a Stable release distribution, which means its packages only update ever
                 ```
             - Unpack the tarball
                 ```console
-                tar -xvf void-<...>-ROOTFS.tar.xz
+                tar -xvf void-<...>-ROOTFS.tar.xz -C [mount-point]
                 ```
 
 ### Configuration
@@ -245,11 +245,14 @@ Void is a Stable release distribution, which means its packages only update ever
                 ```console
                 sudo whoami
                 ```
-    - Initialize RAM filesystem
+    - Make Initialization RAM filesystem (initramfs)
         - Using dracut
-            + Similar to 'mkinitramfs'
             ```console
-            dracut 
+            dracut /boot/initramfs-linux.img
+            ```
+        - Using mkinitcpio
+            ```console
+            mkinitcpio -P linux|linux-lts
             ```
     - Installing Bootloader
         - GRUB
@@ -312,11 +315,32 @@ Void is a Stable release distribution, which means its packages only update ever
                 ```
     - Finalization
         - (Optional) Use 'xbps-reconfigure' to ensure all installed packages are configured properly
-            + This will make 'dracut' generate an initramfs and 
-            + will make GRUB generate a working configuration
+            - Notes
+                - This will 
+                    + make 'dracut' generate an initramfs and 
+                    + make GRUB generate a working configuration
+                - Thus, if you have done the above 2, this is not necessary
             ```console
             xbps-reconfigure -fa
             ```
+
+### Post-Installation
+- Troubleshooting
+    - To update the initramfs
+        - Using update-initramfs
+            ```console
+            sudo update-initramfs -u
+            ```
+        - Using dracut
+            ```console
+            dracut /boot/initramfs-linux.img
+            ```
+        - Using xbps-reconfigure
+            - Search 'ls /lib/modules' for the linux version of choice
+            - Reconfigure linux version
+                ```console
+                xbps-reconfigure -f [linux<output-from-module>]
+                ```
 
 ## Documentation
 ### Commands
