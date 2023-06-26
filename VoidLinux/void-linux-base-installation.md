@@ -60,6 +60,7 @@ Void is a Stable release distribution, which means its packages only update ever
 + void-installer : Installs the base/root filesystem by executing the 'void-installer' TUI Installer
 
 ### Base Filesystem
+> Please stick to just one method in this section
 - XBPS Method
     - Pre-Requisites
         - Ensure that you have the following packages
@@ -161,6 +162,7 @@ Void is a Stable release distribution, which means its packages only update ever
                 + arch-chroot (from arch-install-scripts) : A wrapper for using chroot with the various pre-requisites; Useful and used with ArchLinux base installation from the command line via pacstrap (bootstrapping with pacman)
     - Chroot into mount point
         - Using xchroot
+            + Required if using the Void linux live ISO
             ```console
             xchroot [mount-point] [shell]
             ```
@@ -247,9 +249,15 @@ Void is a Stable release distribution, which means its packages only update ever
                 ```
     - Make Initialization RAM filesystem (initramfs)
         - Using dracut
-            ```console
-            dracut /boot/initramfs-linux.img
-            ```
+            - Check for linux modules in '/lib/modules'
+                ```console
+                ls -lha /lib/modules
+                ```
+            - Generate initramfs image
+                + This will output the initramfs image file to '/boot/initramfs-<version>.img'
+                ```console
+                dracut --force --hostonly --kver <kernel-version>
+                ```
         - Using mkinitcpio
             ```console
             mkinitcpio -P linux|linux-lts
@@ -312,6 +320,10 @@ Void is a Stable release distribution, which means its packages only update ever
             - Generate GRUB configuration file
                 ```console
                 grub-mkconfig -o /boot/grub/grub.cfg
+                ```
+            - Update Grub after (re)generating configuration files
+                ```console
+                update-grub
                 ```
     - Finalization
         - (Optional) Use 'xbps-reconfigure' to ensure all installed packages are configured properly
