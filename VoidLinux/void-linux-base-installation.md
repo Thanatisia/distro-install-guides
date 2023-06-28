@@ -668,7 +668,7 @@ Void is a Stable release distribution, which means its packages only update ever
         ```console
         $EDITOR /etc/rc.conf
         ```
-    - Make Initialization RAM filesystem (initramfs)
+    - (Optional) Make Initialization RAM filesystem (initramfs)
         - Using dracut
             - Check for linux modules in '/lib/modules'
                 ```console
@@ -754,14 +754,15 @@ Void is a Stable release distribution, which means its packages only update ever
                             ```console
                             grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id="[id-name]" --debug /dev/{sdX|mmcblkX|nvmeNpX}
                             ```
-            - Generate GRUB configuration file
-                ```console
-                grub-mkconfig -o /boot/grub/grub.cfg
-                ```
-            - Update Grub after (re)generating configuration files
-                ```console
-                update-grub
-                ```
+            - (Re)enerate GRUB configuration file
+                - Using grub-mkconfig
+                    ```console
+                    grub-mkconfig -o /boot/grub/grub.cfg
+                    ```
+                - Using update-grub
+                    ```console
+                    update-grub
+                    ```
     - Edit sudoers file
         - Information
             + Sudoers file is in '/etc/sudoers'
