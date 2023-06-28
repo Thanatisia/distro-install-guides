@@ -596,18 +596,15 @@ Void is a Stable release distribution, which means its packages only update ever
                     ```
     - Setting Locales and Keyboard
         - Locales
-            - Add locale
-                - Methods
-                    1. Editing /etc/locale.gen and add locale
-                        - Information
-                            + Edit '/etc/locale.gen' and uncomment your locale (i.e. en_[country-code].UTF-8 UTF-8) and other needed locales
-                        - Manual
-                            - Edit '/etc/locale.gen'
-                                ```console
-                                $EDITOR /etc/locale.gen
-                                ```
-                            + Uncomment locales and save files
-                        - Automatic via sed
+            - Edit locales
+                - If installing a glibc distribution
+                    - Edit '/etc/default/libc-locales' and 
+                        + Uncomment desired 'locales (i.e. en_<country-code> UTF-8 UTF-8)'
+                        - Manually
+                            ```console
+                            $EDITOR /etc/default/libc-locales
+                            ```
+                        - Automatically via sed
                             - Information
                                 + the regex '/[keyword]/s/^#//g' will uncomment the keyword from the file
                                 + the regex '/[keyword]/s/^/#/g' will comment the keyword from the file
@@ -622,13 +619,15 @@ Void is a Stable release distribution, which means its packages only update ever
                                         + file-name : Specify the filename to edit
                                     - Options
                                         + -i : Include regex
-                            ```console
-                            sed -i '/[locale]/s/^#//g' /etc/locale.gen
-                            ```
-            - Generate locales
-                ```console
-                locale-gen
-                ```
+                            - Uncomment the locale
+                                + Please replace '[locale]' with your locale (ie. [language]_[country-code].UTF-8 UTF-8)
+                                ```console
+                                sed -i '/[locale]/s/^#//g' /etc/default/libc-locales
+                                ```
+                    - Generate locale files
+                        ```console
+                        xbps-reconfigure -f glibc-locales
+                        ```
             - Set LANG variable according to your selected locale
                 ```console
                 echo "LANG=[locale]" | tee -a /etc/locale.conf
@@ -669,17 +668,6 @@ Void is a Stable release distribution, which means its packages only update ever
         ```console
         $EDITOR /etc/rc.conf
         ```
-    - Edit locales
-        - If installing a glibc distribution
-            - Edit '/etc/default/libc-locales' and 
-                + Uncomment desired 'locales (i.e. en_<country-code> UTF-8 UTF-8)'
-                ```console
-                $EDITOR /etc/default/libc-locales
-                ```
-            - Generate locale files
-                ```console
-                xbps-reconfigure -f glibc-locales
-                ```
     - Make Initialization RAM filesystem (initramfs)
         - Using dracut
             - Check for linux modules in '/lib/modules'
