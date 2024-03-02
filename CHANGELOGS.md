@@ -35,4 +35,10 @@
         - Added '--privileged' to docker run parameter
         - Added section 'Things to Note'
             + Added information about privileged
+#### 2249H
+- Updates
+    - Updated document 'base-installation.md' in 'NixOS/amd64/'
+        - Added 'configuration.nix' and 'hardware-configuration.nix' to step 'Edit the configuration file' 
+            + To emphasize the need to edit both files
+        - Added 'configuration.nix' and 'hardware-configuration.nix' to '### Files'
 

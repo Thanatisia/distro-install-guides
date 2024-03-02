@@ -240,9 +240,14 @@ To backup the configuration file is to backup the instructions to recreate the w
 - Edit the generated configuration file
     - Explanation
         + Uncomment all settings you want in your system
-    ```console
-    $EDITOR /mnt/etc/nixos/configuration.nix
-    ```
+    - Software flakes configuration.nix file
+        ```console
+        $EDITOR /mnt/etc/nixos/configuration.nix
+        ```
+    - Hardware flakes configuration.nix file
+        ```console
+        $EDITOR /mnt/etc/nixos/hardware-configuration.nix
+        ```
 
 - Install and Bootstrap NixOS into your base filesystem according to the configuration you edited
     - Explanation
@@ -320,7 +325,8 @@ To backup the configuration file is to backup the instructions to recreate the w
     + will not work properly without '--privileged' passed into 'docker run', or 'privileged: true' set in docker-compose.yaml
 
 ### Files
-+ /etc/nixos/configuration.nix : NixOS configuration
++ /etc/nixos/configuration.nix : NixOS Software configuration
++ /etc/nixos/hardware-configuration.nix : NixOS Hardware configuration
 
 ### Folders
 - /etc/ : System configuration and settings directory
