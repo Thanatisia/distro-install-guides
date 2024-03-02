@@ -48,10 +48,24 @@ To backup the configuration file is to backup the instructions to recreate the w
 
 - Partition Management
     - Create new partitions
+        - Syntax
+            - MSDOS/MBR
+                ```bash
+                sudo parted [disk-label] mkpart [partition-type] [partition-filesystem] [starting-size] [ending-size]
+                ```
+            - GPT (UEFI)
+                ```bash
+                sudo parted [disk-label] mkpart [partition-label] [partition-filesystem] [starting-size] [ending-size]
+                ```
         - Boot Partition
-            ```bash
-            sudo parted [disk-label] mkpart primary ext4 0% 1024MiB
-            ```
+            - MSDOS/MBR
+                ```bash
+                sudo parted [disk-label] mkpart [partition-type] ext4 0% 1024MiB
+                ```
+            - GPT (UEFI)
+                ```bash
+                sudo parted [disk-label] mkpart [partition-label] ext4 0% 1024MiB
+                ```
         - Root Partition
             ```bash
             sudo parted [disk-label] mkpart primary ext4 1024MiB 50%
@@ -62,6 +76,15 @@ To backup the configuration file is to backup the instructions to recreate the w
             ```
 
     - Format partitions
+        - Syntax
+            - Ext4
+                ```bash
+                sudo mkfs.ext4 [disk-label]{boot-partition-number}
+                ```
+            - FAT{8|16|32}
+                ```bash
+                sudo mkfs.fat -f {8|16|32} [disk-label]{boot-partition-number}
+                ```
         - Boot Partition
             ```bash
             sudo mkfs.ext4 [disk-label]{boot-partition-number}
@@ -76,9 +99,14 @@ To backup the configuration file is to backup the instructions to recreate the w
             ```
 
     - Set boot partition as bootable
-        ```bash
-        sudo parted [disk-label] set [boot-partition-number] boot on
-        ```
+        - BIOS
+            ```bash
+            sudo parted [disk-label] set [boot-partition-number] boot on
+            ```
+        - ESP (Default)
+            ```bash
+            sudo parted [disk-label] set [boot-partition-number] esp on
+            ```
 
 #### Disk Mounting
 - Create root partition mount point

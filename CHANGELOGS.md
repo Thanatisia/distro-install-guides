@@ -19,3 +19,8 @@
     - Updated document 'base-installation.md' in 'NixOS/amd64/'
         + Added Error Recovery steps
 
+#### 2231H
+- Updates
+    - Updated document 'base-installation.md' in 'NixOS/amd64/'
+        + Updated Partition Management steps with GPT/UEFI setup
+
