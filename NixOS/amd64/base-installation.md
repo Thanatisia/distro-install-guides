@@ -1,4 +1,4 @@
-# NixOS installation guide
+# NixOS Base Installation from Command Line via Bootstrapping
 
 ## Table of Contents
 - Information
@@ -30,32 +30,194 @@ To backup the configuration file is to backup the instructions to recreate the w
 ```
 
 ### Project
-- Configuration Folder: /etc/nixos/
-- Configuration File: /etc/nixos/configuration.nix
 
-## Preparation
-- Host
-    - Installing Pre-Requsites and Dependences
-        - If you are using an existing distribution/system (non-NixOS)
-            - Install Packages
-                + nix
+## Setup
+### Dependencies
+- nixos-generate-config : Base System Bootstrapper (like pacstrap for ArchLinux and debootstrap for Debian) 
+    + Found in the nixos install tools (github.com/NixOS/nixos-install-tools)
++ docker : (Optional) If your host is on a non-NixOS system and does not natively use the nix package manager
++ docker-compose : (Optional) If your host is on a non-NixOS system and does not natively use the nix package manager
 
-## Installing
-### Base Filesystem
-- Generate distribution Base Filesystem configuration file
-    - This will bootstrap the distribution's base filesystem into the mount point's root directory
-        + as well as the configuration file containing NixOS's recipe/installing configs
-    + Using `nixos-generate-config --root [mount-point]`
-    ```console
-    nixos-generate-config --root /mnt
+### Pre-Requisites and Preparation
+#### Host
+- Disk Management
+    - Format disk label
+        ```bash
+        sudo parted [disk-label] mklabel [msdos|gpt]
+        ```
+
+- Partition Management
+    - Create new partitions
+        - Boot Partition
+            ```bash
+            sudo parted [disk-label] mkpart primary ext4 0% 1024MiB
+            ```
+        - Root Partition
+            ```bash
+            sudo parted [disk-label] mkpart primary ext4 1024MiB 50%
+            ```
+        - (Optional) Home Partition
+            ```bash
+            sudo parted [disk-label] mkpart primary ext4 50% 100%
+            ```
+
+    - Format partitions
+        - Boot Partition
+            ```bash
+            sudo mkfs.ext4 [disk-label]{boot-partition-number}
+            ```
+        - Root Partition
+            ```bash
+            sudo mkfs.ext4 [disk-label]{root-partition-number}
+            ```
+        - (Optional) Home Partition
+            ```bash
+            sudo mkfs.ext4 [disk-label]{home-partition-number}
+            ```
+
+    - Set boot partition as bootable
+        ```bash
+        sudo parted [disk-label] set [boot-partition-number] boot on
+        ```
+
+#### Disk Mounting
+- Create root partition mount point
+    ```bash
+    mkdir -pv /mnt
     ```
+
+- Mount root partition to mount point
+    ```bash
+    mount [disk-label]{root-partition-number} [root-mount-point]
+    ```
+
+- Create boot and home partition mount point
+    ```bash
+    mkdir -pv /mnt/{boot,home}
+    ```
+
+- Mount remaining partitions partition to mount point
+    ```bash
+    mount [disk-label]{boot-partition-number} /mnt/[boot-mount-point]
+    mount [disk-label]{home-partition-number} /mnt/[home-mount-point]
+    ```
+
+#### Setup System Development Environment
+> Note: This section is option. If you are using a NixOS-based system, you may proceed to the Base/Root Filesystem installation step
+
+- Using nix on host system
+    - Install nix
+        - Using package manager
+            - apt-based
+                ```bash
+                apt install nix
+                ```
+            - pacman-based
+                ```bash
+                pacman -S nix
+                ```
+    - User Management
+        - Create a dedicated user for nix packaging and add the user to the group 'nix-users'
+            + To access the daemon socket
+            ```bash
+            useradd -g nix-users nixuser
+            ```
+        - Set password
+            ```bash
+            passwd nixuser
+            ```
+    - Enable and start service 'nix-daemon'
+        - Enable service
+            ```bash
+            service nix-daemon enable
+            ```
+        - Start service
+            ```bash
+            service nix-daemon start
+            ```
+    - Restart system
+        ```bash
+        sudo reboot now
+        ```
+    - Add nix channel
+        ```bash
+        nix-channel --add https://nixos.org/channels/nixpkgs-unstable
+        ```
+    - Verify channel
+        ```bash
+        nix-channel --list
+        ```
+    - Update channel
+        ```bash
+        nix-channel --update
+        ```
+
+- Using docker
+    - Startup 'nixos/nix:latest' docker container
+        ```bash
+        docker run -itd --name=nix \
+            --restart=unless-stopped \
+            -v /path/to/workdir:/workdir \
+            -v [root-mount-point]:[root-mount-point]
+            nixos/nix:[tag|version]
+        ```
+
+    - Enter the nix container
+        ```bash
+        docker exec -it nix /bin/sh
+        ```
+
+#### Toolings
+- Install the Installation tool package using Nix package manager
+    - Using nix-env
+        - On NixOS
+            ```bash
+            nix-env -iA nixos.nixos-install-tools
+            ```
+        - On Non-NixOS
+            ```bash
+            nix-env -iA nixpkgs.nixos-install-tools
+            ```
+    - Using the NixOS configuration
+        - Append the following Nix code to your NixOS configuration in '/etc/nixos/configuration.nix'
+            ```nix
+            environment.systemPackages = [
+                pkgs.nixos-install-tools
+            ];
+            ```
+    - Using nix-shell
+        ```bash
+        nix-shell -p nixos-install-tools
+        ```
+
+## Installation
+### Base/Root Filesystem
+- Generate the root filesystem to your root partition
+    - Explanation
+        - This will bootstrap the distribution's base filesystem into the mount point's root directory
+            + as well as the configuration file containing NixOS's recipe/installing configs
+    - Synopsis/Syntax
+        ```bash
+        nixos-generate-config --root [root-mount-point]
+        ```
+    - Bootstrap Install to root mount point
+        ```console
+        nixos-generate-config --root /mnt
+        ```
+
 - Edit the generated configuration file
+    - Explanation
+        + Uncomment all settings you want in your system
     ```console
     $EDITOR /mnt/etc/nixos/configuration.nix
     ```
+
 - Install and Bootstrap NixOS into your base filesystem according to the configuration you edited
-    + The system will detect the mount point containing your NixOS configuration file and partition and 
-    + install the base filesystem into the mount point's root directory
+    - Explanation
+        + The system will detect the mount point containing your NixOS configuration file and partition and 
+        + install the base filesystem into the mount point's root directory
+    - Options
+        + `--root [root-filesystem-mountpoint]` : Explicitly specify the root partition mount point
     ```console
     nixos-install
     ```
@@ -65,17 +227,36 @@ To backup the configuration file is to backup the instructions to recreate the w
 - nix-* : Handles the nix handling/systems
     - `nix-env {options} [package-name]` : Handles the Nix environment values such as Packages
         - Options
-            + 
+            + -A : 
+            + -i : Install the specified package
 - nixos-* : Handles the Nix operating system controls such as bootstrapping, installation to other systems etc
     - `nixos-generate-config {options}` : Generate the NixOS system configuration file that defines the system.
         - Options
             + `--root [mount-point]` : Explicitly specify the root filesystem to generate the configuration file in; Usually within the root partition to bootstrap the base filesystem into
     + `nixos-install` : Begin installation and bootstrapping of the Nix base packages into the mounted root partition
 
+### Error Checking
+- `error: path '/nix/store/[store-hash]-[package|file]' is not valid`
+    - Error Type
+        + This suggests a potential store issue
+    - Possible Solution(s)
+        1. Verify and Repair stores
+            ```bash
+            nix-store --verify --check-contents --repair
+            ```
+
 ## Wiki
+
+### Files
++ /etc/nixos/configuration.nix : NixOS configuration
+
+### Folders
+- /etc/ : System configuration and settings directory
+    - nixos : Primary NixOS configurations and settings directory
 
 ## Resources
 
 ## References
++ [NixOS - Wiki - Installation Guide](https://nixos.wiki/wiki/NixOS_Installation_Guide)
 
 ## Remarks
