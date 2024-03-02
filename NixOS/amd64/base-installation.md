@@ -30,6 +30,9 @@ To backup the configuration file is to backup the instructions to recreate the w
 ```
 
 ### Project
+- Defaults
+    - NixOS uses (U)EFI and GPT specifications by default
+        + Bootloader and partitioning uses UEFI settings
 
 ## Setup
 ### Dependencies
