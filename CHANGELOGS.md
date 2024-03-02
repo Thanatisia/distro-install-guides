@@ -29,3 +29,10 @@
     - Updated document 'base-installation.md' in 'NixOS/amd64/'
         + Added defaults information
 
+#### 2239H
+- Updates
+    - Updated document 'base-installation.md' in 'NixOS/amd64/'
+        - Added '--privileged' to docker run parameter
+        - Added section 'Things to Note'
+            + Added information about privileged
+

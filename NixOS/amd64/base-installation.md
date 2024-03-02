@@ -188,6 +188,7 @@ To backup the configuration file is to backup the instructions to recreate the w
         ```bash
         docker run -itd --name=nix \
             --restart=unless-stopped \
+            --privileged \
             -v /path/to/workdir:/workdir \
             -v [root-mount-point]:[root-mount-point]
             nixos/nix:[tag|version]
@@ -311,6 +312,12 @@ To backup the configuration file is to backup the instructions to recreate the w
                     ```
 
 ## Wiki
+
+### Things to note
+- NixOS (or Nix-related system operations) wont run properly on docker (without --privileged or the likes) because it requires systemd
+    - So functionalities like
+        + Base/Root Filesystem Bootstrap Installation via nixos-install
+    + will not work properly without '--privileged' passed into 'docker run', or 'privileged: true' set in docker-compose.yaml
 
 ### Files
 + /etc/nixos/configuration.nix : NixOS configuration
