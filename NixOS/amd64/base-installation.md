@@ -245,6 +245,40 @@ To backup the configuration file is to backup the instructions to recreate the w
             nix-store --verify --check-contents --repair
             ```
 
+### Error Recovery
+- If you accidentally destroyed your bootloader configurations 
+    - Possible Scenarios
+        - Because you accidentally wrote the wrong disk label (i.e. /dev/sda instead of /dev/sdb) in the NixOS flake configuration file
+            + Which caused NixOS to run 'grub-install' in the wrong disk label
+    - Solutions
+        - Attach your drive to a secondary bootable device and start it up
+            - Mount the device to your mount directory
+                - Notes
+                    + Just mount your root partition and boot partition
+                - Mount root partition
+                    ```bash
+                    sudo mount [disk-label] [mount-point]
+                    ```
+                - Mount boot partition
+                    ```bash
+                    sudo mount [disk-label] [mount-point]/boot
+                    ```
+            - Chroot into the root filesystem
+                - Using 'arch-chroot'
+                    ```bash
+                    sudo arch-chroot [root-filesystem-mount-point]
+                    ```
+            - Install Bootloader to the correct disk label
+                - GRUB
+                    ```bash
+                    grub-install [disk-label]
+                    ```
+            - Generate Bootloader configurations to the boot partition
+                - GRUB
+                    ```bash
+                    grub-mkconfig -o /boot/grub/grub.cfg
+                    ```
+
 ## Wiki
 
 ### Files
@@ -260,3 +294,4 @@ To backup the configuration file is to backup the instructions to recreate the w
 + [NixOS - Wiki - Installation Guide](https://nixos.wiki/wiki/NixOS_Installation_Guide)
 
 ## Remarks
+

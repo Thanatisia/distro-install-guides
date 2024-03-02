@@ -14,3 +14,8 @@
     - Updated document 'base-installation.md' in 'NixOS/amd64/'
         + NixOS Base Installation from Command Line via Bootstrapping
 
+#### 2202H
+- Updates
+    - Updated document 'base-installation.md' in 'NixOS/amd64/'
+        + Added Error Recovery steps
+
