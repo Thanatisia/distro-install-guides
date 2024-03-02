@@ -38,6 +38,8 @@ To backup the configuration file is to backup the instructions to recreate the w
 ### Dependencies
 - nixos-generate-config : Base System Bootstrapper (like pacstrap for ArchLinux and debootstrap for Debian) 
     + Found in the nixos install tools (github.com/NixOS/nixos-install-tools)
+- unshare
+    + Found in the [nixos install tools](https://github.com/NixOS/nixpkgs/blob/nixos-23.11/pkgs/os-specific/linux/util-linux/default.nix#L127)
 + docker : (Optional) If your host is on a non-NixOS system and does not natively use the nix package manager
 + docker-compose : (Optional) If your host is on a non-NixOS system and does not natively use the nix package manager
 
@@ -222,6 +224,28 @@ To backup the configuration file is to backup the instructions to recreate the w
         nix-shell -p nixos-install-tools
         ```
 
+- Install the 'util-linux' package using Nix package manager
+    - Using nix-env
+        - On NixOS
+            ```bash
+            nix-env -iA nixos.util-linux
+            ```
+        - On Non-NixOS
+            ```bash
+            nix-env -iA nixpkgs.util-linux
+            ```
+    - Using the NixOS configuration
+        - Append the following Nix code to your NixOS configuration in '/etc/nixos/configuration.nix'
+            ```nix
+            environment.systemPackages = [
+                pkgs.util-linux
+            ];
+            ```
+    - Using nix-shell
+        ```bash
+        nix-shell -p util-linux
+        ```
+
 ## Installation
 ### Base/Root Filesystem
 - Generate the root filesystem to your root partition
@@ -336,6 +360,7 @@ To backup the configuration file is to backup the instructions to recreate the w
 
 ## References
 + [NixOS - Wiki - Installation Guide](https://nixos.wiki/wiki/NixOS_Installation_Guide)
++ [Nix Package Manager - Wiki - Installation Guide](https://nixos.wiki/wiki/Nix_Installation_Guide)
 
 ## Remarks
 

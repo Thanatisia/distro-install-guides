@@ -42,3 +42,10 @@
             + To emphasize the need to edit both files
         - Added 'configuration.nix' and 'hardware-configuration.nix' to '### Files'
 
+#### 2258H
+- Updates
+    - Updated document 'base-installation.md' in 'NixOS/amd64/'
+        + Added information about dependency 'unshare'
+        + Added installation information for package 'util-linux'
+        + Added Resources for Nix Package manager installation
+
