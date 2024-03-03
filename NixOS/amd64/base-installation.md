@@ -302,6 +302,23 @@ To backup the configuration file is to backup the instructions to recreate the w
         ```
 
     - Update channel
+        - Errors encountered
+            - If you encountered an error regarding '--no-sandbox'
+                - Remount the partition containing your '/etc/nix'
+                    ```bash
+                    sudo mount -o remount,rw [mount-partition]
+                    ```
+                - Edit '/etc/nix/nix.conf'
+                    - Change 'sandbox = false' to 'sandbox = true'
+                        - Using sed
+                            - Explanation
+                                - This regex pattern looks for the string 'sandbox = true' with any amount of whitespace around the '=' sign, 
+                                    + and replaces it with 'sandbox = false'. 
+                                + The 'g' flag at the end makes sure it replaces all occurrences in the file, not just the first one it finds.
+                            ```bash
+                            sed -i 's/sandbox\s*=\s*true/sandbox = false/g' /etc/nix/nix.conf
+                            ```
+                        + Retry
         ```bash
         nix-channel --update
         ```

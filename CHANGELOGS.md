@@ -57,3 +57,8 @@
         + Added new dependency: squashfs-tools
         + Added new host system development environment method: Using the NixOS disk image
 
+#### 1544H
+- Updates
+    - Updated document 'base-installation.md' in 'NixOS/amd64/' 
+        + Added fix/bypass for 'you encountered an error regarding '--no-sandbox'
+
