@@ -42,6 +42,8 @@ To backup the configuration file is to backup the instructions to recreate the w
     + Found in the [nixos install tools](https://github.com/NixOS/nixpkgs/blob/nixos-23.11/pkgs/os-specific/linux/util-linux/default.nix#L127)
 + docker : (Optional) If your host is on a non-NixOS system and does not natively use the nix package manager
 + docker-compose : (Optional) If your host is on a non-NixOS system and does not natively use the nix package manager
+- squashfs-tools : (Optional) If you are bootstrap installing NixOS from an existing non-NixOS distribution system
+    + Contains 'squashfs' and 'unsquashfs'
 
 ### Pre-Requisites and Preparation
 #### Host
@@ -186,6 +188,9 @@ To backup the configuration file is to backup the instructions to recreate the w
         ```
 
 - Using docker
+    - Notes
+        - The nix docker image is using busybox
+            + Hence, you will need to perform some pre-requisites first
     - Startup 'nixos/nix:latest' docker container
         ```bash
         docker run -itd --name=nix \
@@ -199,6 +204,116 @@ To backup the configuration file is to backup the instructions to recreate the w
     - Enter the nix container
         ```bash
         docker exec -it nix /bin/sh
+        ```
+
+- Using NixOS disk image
+    - Create directory to mount the ISO image files
+        ```bash
+        mkdir -p iso
+        ```
+
+    - Create directory to store the unsquashed root filesystem
+        ```bash
+        mkdir -pv squashfs/nix
+        ```
+
+    - Download the NixOS minimal disk image/iso from the [website](https://nixos.org/download.html)
+        - Notes
+            + Please note the latest version from the website
+        ```bash
+        wget https://channels.nixos.org/nixos-[version]/latest-nixos-minimal-x86_64-linux.iso
+        ```
+
+    - Modprobe loopback devices
+        ```bash
+        modprobe loop
+        ```
+
+    - Mount the ISO image to a media mount directory as loopback device
+        ```bash
+        sudo mount -o loop latest-nixos-minimal-x86_64-linux.iso [ISO-image-mount-point]/iso
+        ```
+
+    - Unsquash the squashfs file
+        ```bash
+        unsquashfs -d squashfs/nix/store [ISO-image-mount-point]/iso/nix-store.squashfs '*'
+        ```
+
+    - Change directory into 'squashfs'
+        ```bash
+        cd squashfs
+        ```
+
+    - Mount Virtual Kernel Devices from host system to container
+        - Explanation
+            - To have a working network connection, copy /etc/resolv.conf to squashfs/nix/etc. 
+                + For a working chroot, you also need to bind /dev, /proc and /sys directories to the target system.
+        - Make directories
+            ```bash
+            mkdir -pv etc dev proc sys
+            ```
+        - Copy /etc/resolv.conf from host to 'squashfs/nix/etc'
+            ```bash
+            cp /etc/resolv.conf etc/
+            ```
+        - Mount Virtual Kernel Devices
+            ```bash
+            for devices in dev proc sys; do
+                mount --bind "/${devices}" "${devices}";
+            done
+            ```
+
+    - Circumventing regular init sequence
+        - Explanation
+            - To properly chroot into the host system you must locate the packages named nixos and bash. 
+                + The following commands may prove helpful
+        - Setting INIT
+            ```bash
+            INIT=$(find . -type f -path '*nixos*/init')
+            ```
+        - Setting BASH
+            ```bash
+            BASH=$(find . -type f -path '*/bin/bash' | tail -n 1)
+            ```
+
+    - Replace further mentions of these files with your own results 
+        - Notes 
+            + Note the missing prefix in some uses.
+        - Explanation
+            - Edit the target system init script to start a bash session instead of systemd. 
+                + As that is the last thing the script does, adding an interactive program does not pose a problem.
+        ```bash
+        sed -i "s,exec /.*systemd,exec /$BASH," $INIT
+        ```
+
+    - Chroot into root filesystem
+        ```bash
+        chroot . /$INIT
+        ```
+
+    - Add nix channel
+        ```bash
+        nix-channel --add https://nixos.org/channels/nixpkgs-unstable
+        ```
+
+    - Verify channel
+        ```bash
+        nix-channel --list
+        ```
+
+    - Update channel
+        ```bash
+        nix-channel --update
+        ```
+
+    - Set environment variable 'NIX_PATH'
+        ```bash
+        export NIX_PATH="nixpkgs=channel:nixos-[nixos-version]"
+        ```
+
+    - (Optional) After complete, unmount the mounted loopback device
+        ```bash
+        sudo umount {[mount-point]|/path/to/iso/image}
         ```
 
 #### Toolings
@@ -359,7 +474,9 @@ To backup the configuration file is to backup the instructions to recreate the w
 ## Resources
 
 ## References
++ [GitHub Gist - Vincibean - my-nixos-installation.md](https://gist.github.com/Vincibean/baf1b76ca5147449a1a479b5fcc9a222)
 + [NixOS - Wiki - Installation Guide](https://nixos.wiki/wiki/NixOS_Installation_Guide)
++ [NixOS - Wiki - Installing from Linux](https://nixos.wiki/wiki/Installing_from_Linux)
 + [Nix Package Manager - Wiki - Installation Guide](https://nixos.wiki/wiki/Nix_Installation_Guide)
 
 ## Remarks

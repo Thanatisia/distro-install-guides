@@ -2,6 +2,7 @@
 
 ## Table of Contents
 + [2024-03-02](#2024-03-02)
++ [2024-03-03](#2024-03-03)
 
 ## Contents
 ### 2024-03-02
@@ -48,4 +49,11 @@
         + Added information about dependency 'unshare'
         + Added installation information for package 'util-linux'
         + Added Resources for Nix Package manager installation
+
+### 2024-03-03
+#### 1510H
+- Updates
+    - Updated document 'base-installation.md' in 'NixOS/amd64/'
+        + Added new dependency: squashfs-tools
+        + Added new host system development environment method: Using the NixOS disk image
 
