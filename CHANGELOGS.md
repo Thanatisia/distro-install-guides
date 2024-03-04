@@ -3,6 +3,7 @@
 ## Table of Contents
 + [2024-03-02](#2024-03-02)
 + [2024-03-03](#2024-03-03)
++ [2024-03-04](#2024-03-04)
 
 ## Contents
 ### 2024-03-02
@@ -61,4 +62,11 @@
 - Updates
     - Updated document 'base-installation.md' in 'NixOS/amd64/' 
         + Added fix/bypass for 'you encountered an error regarding '--no-sandbox'
+
+### 2024-03-04
+#### 1534H
+- Updates
+    - Updated document 'base-installation.md' in 'NixOS/amd64/' 
+        - Replaced 'nixos/nix' with the community-managed nix docker images 'nixpkgs/nix-unstable' (and nixpkgs/nix by extension)
+            + Installable using 'nixpkgs/nix-unstable' as nixos/nix uses BusyBox and nix-unstable uses rootfs
 

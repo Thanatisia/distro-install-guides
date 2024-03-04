@@ -34,6 +34,15 @@ To backup the configuration file is to backup the instructions to recreate the w
     - NixOS uses (U)EFI and GPT specifications by default
         + Bootloader and partitioning uses UEFI settings
 
+- Repositories
+    - GitHub
+        + [nixos/nix](https://github.com/nixos/nix) : Official Nix repository
+        + [nix-community/docker-nixpkgs](https://github.com/nix-community/docker-nixpkgs) : Nix community repositories of docker images
+- Docker Images
+    - DockerHub
+        + [nixos/nix](https://hub.docker.com/r/nixos/nix) : Official Nix docker image; Made in BusyBox
+        + [nixpkgs/nix-unstable](https://hub.docker.com/r/nixpkgs/nix-unstable) : Managed and driven by the Nix community
+
 ## Setup
 ### Dependencies
 - nixos-generate-config : Base System Bootstrapper (like pacstrap for ArchLinux and debootstrap for Debian) 
@@ -188,22 +197,44 @@ To backup the configuration file is to backup the instructions to recreate the w
         ```
 
 - Using docker
-    - Notes
-        - The nix docker image is using busybox
-            + Hence, you will need to perform some pre-requisites first
-    - Startup 'nixos/nix:latest' docker container
+    - Startup ['nixpkgs/nix-unstable:latest'](https://hub.docker.com/r/nixpkgs/nix-unstable) docker container
+        - Notes
+            - Previously using 'nixos/nix', 
+                - I realised that the official nix docker image is built using busybox, 
+                    - and as such, 
+                        + is incompatible and unable to be used to bootstrap install a NixOS minimal base installation
         ```bash
-        docker run -itd --name=nix \
+        docker run -itd --name=nix-unstable \
             --restart=unless-stopped \
             --privileged \
             -v /path/to/workdir:/workdir \
-            -v [root-mount-point]:[root-mount-point]
-            nixos/nix:[tag|version]
+            -v [root-mount-point]:[root-mount-point] \
+            nixpkgs/nix-unstable:[tag|version]
         ```
 
     - Enter the nix container
         ```bash
-        docker exec -it nix /bin/sh
+        docker exec -it nix-unstable /bin/sh
+        ```
+
+    - Add nix channel
+        ```bash
+        nix-channel --add https://nixos.org/channels/nixpkgs-unstable
+        ```
+
+    - Verify channel
+        ```bash
+        nix-channel --list
+        ```
+
+    - Update channel
+        ```bash
+        nix-channel --update
+        ```
+
+    - Set environment variable 'NIX_PATH'
+        ```bash
+        export NIX_PATH="nixpkgs=channel:nixos-[nixos-version]"
         ```
 
 - Using NixOS disk image
@@ -491,6 +522,8 @@ To backup the configuration file is to backup the instructions to recreate the w
 ## Resources
 
 ## References
++ [DockerHub - nixpkgs/nix-unstable](https://hub.docker.com/r/nixpkgs/nix-unstable)
++ [GitHub - nix-community - docker-nixpkgs](https://github.com/nix-community/docker-nixpkgs)
 + [GitHub Gist - Vincibean - my-nixos-installation.md](https://gist.github.com/Vincibean/baf1b76ca5147449a1a479b5fcc9a222)
 + [NixOS - Wiki - Installation Guide](https://nixos.wiki/wiki/NixOS_Installation_Guide)
 + [NixOS - Wiki - Installing from Linux](https://nixos.wiki/wiki/Installing_from_Linux)
